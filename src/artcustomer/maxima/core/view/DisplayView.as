@@ -34,27 +34,5 @@ package artcustomer.maxima.core.view {
 			
 			this.name = aName;
 		}
-		
-		
-		/**
-		 * Entry point. Override it !
-		 */
-		override protected function onEntry():void {
-			super.onEntry();
-		}
-		
-		/**
-		 * Exit point. Override it !
-		 */
-		override protected function onExit():void {
-			super.onExit();
-		}
-		
-		/**
-		 * Destructor. Override it and call at end !
-		 */
-		override protected function destroy():void {
-			super.destroy();
-		}
 	}
 }

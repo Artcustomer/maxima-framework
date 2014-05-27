@@ -35,6 +35,8 @@ package artcustomer.maxima.engine.assets.medias {
 		protected var _file:String;
 		protected var _type:String;
 		protected var _extension:String;
+		protected var _scale:Number;
+		protected var _lang:String;
 		protected var _data:*;
 		protected var _bytes:*;
 		
@@ -70,7 +72,10 @@ package artcustomer.maxima.engine.assets.medias {
 		 * Start loading. Override it !
 		 */
 		public function load():void {
-			_file = _source.substr(_source.lastIndexOf('/') + 1);
+			if (_scale > 0) _source = FileTools.escapeScaleFromFileName(_source, _scale);
+			if (_lang) _source = FileTools.escapeLangFromFileName(_source, _lang);
+			
+			_file = FileTools.resolveFileInPath(_source);
 			_extension = FileTools.getExtension(_source).toLowerCase();
 			_isOpenStream = true;
 			_status = AssetLoadingStatus.LOADING;
@@ -126,6 +131,8 @@ package artcustomer.maxima.engine.assets.medias {
 			_file = null;
 			_type = null;
 			_extension = null;
+			_scale = 0;
+			_lang = null;
 			_data = null;
 			_bytes = null;
 			_bytesLoaded = 0;
@@ -179,6 +186,34 @@ package artcustomer.maxima.engine.assets.medias {
 		 */
 		public function get group():String {
 			return _group;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set scale(value:Number):void {
+			_scale = value;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get scale():Number {
+			return _scale;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set lang(value:String):void {
+			_lang = value;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get lang():String {
+			return _lang;
 		}
 		
 		/**

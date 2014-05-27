@@ -27,7 +27,17 @@ package artcustomer.maxima.errors {
 		public static const E_INTERACTIVECONTEXT_CONSTRUCTOR:String = "InteractiveContext is an abstract class ! Don't instantiate it directly !";
 		public static const E_EVENTCONTEXT_CONSTRUCTOR:String = "EventContext is an abstract class ! Don't instantiate it directly !";
 		
+		public static const E_MODEL_CONSTRUCTOR:String = "AbstractModel is an abstract class ! Don't instantiate it directly !";
+		
+		public static const E_COMMAND_CONSTRUCTOR:String = "AbstractCommand is an abstract class ! Don't instantiate it directly !";
+		public static const E_COMMAND_EXECUTE:String = "execute() in an abstract method ! Override it !";
+		
 		public static const E_VALUEOBJECT_CONSTRUCTOR:String = "AbstractValueObject is an abstract class ! Don't instantiate it directly !";
+		
+		public static const E_TASK_ADD:String = "Class must extends AbstractTask and be not null !";
+		public static const E_TASKPROCESOR_EMPTY:String = "TaskProcesor contains no tasks !";
+		
+		public static const E_CURRENTOBJECT_STARLING_INVALID:String = "Warning ! Current engine object is not AbstractEngineStarlingDisplayObject !";
 		
 		
 		/**

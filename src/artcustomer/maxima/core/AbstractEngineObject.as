@@ -13,9 +13,12 @@ package artcustomer.maxima.core {
 	import artcustomer.maxima.context.IGameContext;
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.events.EngineObjectEvent;
+	import artcustomer.maxima.data.IViewData;
+	import artcustomer.maxima.engine.NavigationSystem;
 	
 	[Event(name="onEntry", type="artcustomer.maxima.events.EngineObjectEvent")]
 	[Event(name="onExit", type="artcustomer.maxima.events.EngineObjectEvent")]
+	[Event(name="onRestart", type="artcustomer.maxima.events.EngineObjectEvent")]
 	
 	
 	/**
@@ -32,7 +35,9 @@ package artcustomer.maxima.core {
 		private var _allowSetContext:Boolean;
 		private var _allowSetName:Boolean;
 		
+		protected var _navigationSystem:NavigationSystem;
 		protected var _isAvailableForHistory:Boolean;
+		protected var _delayPostExit:Boolean;
 		
 		
 		/**
@@ -59,10 +64,28 @@ package artcustomer.maxima.core {
 		
 		
 		/**
-		 * Inject resize methid on object.
+		 * Inject back keyboard input.
+		 */
+		internal function onBack():void {
+			this.onKeyBack();
+		}
+		
+		/**
+		 * Inject resize method on object.
 		 */
 		internal function callResize():void {
 			this.resize();
+		}
+		
+		/**
+		 * Inject update method on object.
+		 * 
+		 * @param	id
+		 * @param	data
+		 * @param	type
+		 */
+		internal function callUpdate(id:String, data:IViewData, type:String):void {
+			this.update(data, type);
 		}
 		
 		/**
@@ -76,6 +99,7 @@ package artcustomer.maxima.core {
 		 * Inject onEntry destroy on object.
 		 */
 		internal function callEntry():void {
+			this.onPreEntry();
 			this.onEntry();
 		}
 		
@@ -84,6 +108,7 @@ package artcustomer.maxima.core {
 		 */
 		internal function callExit():void {
 			this.onExit();
+			if (!_delayPostExit) this.onPostExit();
 		}
 		
 		/**
@@ -115,17 +140,48 @@ package artcustomer.maxima.core {
         }
 		
 		/**
-		 * Entry point. Override it and call it at end !
+		 * Dispatch command to controller by ID
+		 * 
+		 * @param	commandID : Id of the controller
+		 * @param	event : Event with params
 		 */
-		protected function onEntry():void {
+		protected function dispatchCommand(commandID:String, event:Event):void {
+			_context.instance.logicEngine.executeCommand(commandID, event);
+		}
+		
+		/**
+		 * Internal entry point. Override it and call it at first !
+		 * Only for use in Maxima core elements !
+		 */
+		protected function onPreEntry():void {
 			dispatchObjectEvent(EngineObjectEvent.ON_ENTRY);
 		}
 		
 		/**
-		 * Exit point. Override it and call it at end !
+		 * Internal exit point. Override it and call it at end !
+		 * Only for use in Maxima core elements !
+		 * If you set this._delayPostExit at true, don't forget to call super.onPostExit() on your object to exit and continue navigation !
+		 */
+		protected function onPostExit():void {
+			dispatchObjectEvent(EngineObjectEvent.ON_EXIT);
+		}
+		
+		/**
+		 * Entry point. Override it !
+		 * No need to call super method !
+		 */
+		protected function onEntry():void {
+			
+		}
+		
+		/**
+		 * Exit point. Override it !
+		 * No need to call super method !
+		 * You can delay object destruction by setting this._delayPostExit = true.
+		 * With doing that, you must call super.onPostExit() to exit object and continue navigation !
 		 */
 		protected function onExit():void {
-			dispatchObjectEvent(EngineObjectEvent.ON_EXIT);
+			
 		}
 		
 		/**
@@ -143,10 +199,17 @@ package artcustomer.maxima.core {
 		}
 		
 		/**
+		 * When back key is released. Must be overrided !
+		 */
+		protected function onKeyBack():void {
+			
+		}
+		
+		/**
 		 * Restart object.
 		 */
 		protected final function restart():void {
-			this.context.instance.gameEngine.navigationSystem.restartCurrent();
+			dispatchObjectEvent(EngineObjectEvent.ON_RESTART);
 		}
 		
 		/**
@@ -154,10 +217,22 @@ package artcustomer.maxima.core {
 		 */
 		protected function destroy():void {
 			_context = null;
+			_navigationSystem = null;
 			_name = null;
 			_allowSetContext = false;
 			_allowSetName = false;
 			_isAvailableForHistory = false;
+			_delayPostExit = false;
+		}
+		
+		/**
+		 * Called when model is updated. Override it and don't call it !
+		 * 
+		 * @param	data
+		 * @param	type
+		 */
+		public function update(data:IViewData, type:String):void {
+			
 		}
 		
 		/**
@@ -176,6 +251,7 @@ package artcustomer.maxima.core {
 		public function set context(value:IGameContext):void {
 			if (_allowSetContext) {
 				_context = value;
+				_navigationSystem = _context.instance.gameEngine.navigationSystem;
 				
 				_allowSetContext = false;
 			}

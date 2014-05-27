@@ -9,6 +9,7 @@ package artcustomer.maxima.core {
 	import artcustomer.maxima.base.IDestroyable;
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.engine.inputs.controls.*;
+	import artcustomer.maxima.data.IViewData;
 	
 	
 	/**
@@ -49,6 +50,15 @@ package artcustomer.maxima.core {
 		 */
 		public function injectControl(engineObject:AbstractEngineObject, control:IGameControl, eventType:String):void {
 			if (engineObject is AbstractEngineInteractiveObject) (engineObject as AbstractEngineInteractiveObject).injectControl(eventType, control);
+		}
+		
+		/**
+		 * Inject back input on object.
+		 * 
+		 * @param	engineObject
+		 */
+		public function onBack(engineObject:AbstractEngineObject):void {
+			engineObject.onBack();
 		}
 		
 		/**
@@ -112,6 +122,18 @@ package artcustomer.maxima.core {
 		 */
 		public function renderObject(engineObject:AbstractEngineObject):void {
 			engineObject.callRender();
+		}
+		
+		/**
+		 * Call update method on core object.
+		 * 
+		 * @param	engineObject
+		 * @param	id
+		 * @param	data
+		 * @param	type
+		 */
+		public function updateObject(engineObject:AbstractEngineObject, id:String, data:IViewData, type:String):void {
+			engineObject.callUpdate(id, data, type);
 		}
 		
 		

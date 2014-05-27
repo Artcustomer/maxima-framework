@@ -27,9 +27,6 @@ package artcustomer.maxima.engine {
 	 * @author David Massenot
 	 */
 	public class RenderEngine extends AbstractCoreEngine {
-		private static var __instance:RenderEngine;
-		private static var __allowInstantiation:Boolean;
-		
 		private const MEMORY:Number = 0.000000954;
 		
 		private var _heartbeatFunction:Function;
@@ -65,48 +62,6 @@ package artcustomer.maxima.engine {
 		 */
 		public function RenderEngine() {
 			super();
-			
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_RENDERENGINE_CREATE);
-				
-				return;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  Private points
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function constructor():void {
-			init();
-			
-			_isConstruct = true;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destructor():void {
-			unlistenEnterFrame();
-			
-			_isConstruct = false;
-		}
-		
-		//---------------------------------------------------------------------
-		//  Initialize
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function init():void {
-			_state = RenderEngineState.RENDERENGINE_OFF;
-			_timeDelay = 1000;
-			_heartbeatIntervalMs = 1000;
-			_onRendering = false;
 		}
 		
 		//---------------------------------------------------------------------
@@ -135,26 +90,9 @@ package artcustomer.maxima.engine {
 		 * @private
 		 */
 		private function handleEnterFrame(e:Event):void {
-			tick();
-			updateFPS();
-			updateMemory();
-			updateFreeMemory();
-			updatePrivateMemory();
-			updateTotalMemory();
+			var nowTime:uint = getTimer();
+			var delta:uint = nowTime - _fpsLast;
 			
-			if (this.context.instance.gameEngine.currentEngineObject) _injector.renderObject(this.context.instance.gameEngine.currentEngineObject);
-			
-			dispatchRenderEngineEvent(RenderEngineEvent.ON_RENDER);
-		}
-		
-		//---------------------------------------------------------------------
-		//  Tick
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function tick():void {
 			_currentFrameTime = getTimer();
 			
 			if (_frameCount == 0) {
@@ -175,51 +113,21 @@ package artcustomer.maxima.engine {
 			}
 			
 			_lastFrameTime = _currentFrameTime;
-			_frameCount++;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateFPS():void {
-			var nowTime:uint = getTimer();
-			var delta:uint = nowTime - _fpsLast;
-			
-			_fpsTicks++;
+			++_frameCount;
+			++_fpsTicks;
 			
 			if (delta >= _timeDelay) {
 				_fps = _fpsTicks / delta * _timeDelay;
 				_fpsTicks = 0;
 				_fpsLast = nowTime;
 			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateMemory():void {
+			
 			_memory = Number((System.totalMemory * MEMORY).toFixed(4));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateFreeMemory():void {
 			_freeMemory = System.freeMemory;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updatePrivateMemory():void {
 			_privateMemory = System.privateMemory;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateTotalMemory():void {
 			_totalMemory = System.totalMemoryNumber;
+			
+			dispatchRenderEngineEvent(RenderEngineEvent.ON_RENDER);
 		}
 		
 		//---------------------------------------------------------------------
@@ -243,14 +151,18 @@ package artcustomer.maxima.engine {
 			
 			super.setup();
 			
-			constructor();
+			_state = RenderEngineState.RENDERENGINE_OFF;
+			_timeDelay = 1000;
+			_heartbeatIntervalMs = 1000;
+			_onRendering = false;
+			_isConstruct = true;
 		}
 		
 		/**
 		 * Destroy RenderEngine.
 		 */
 		override internal function destroy():void {
-			destructor();
+			unlistenEnterFrame();
 			
 			_heartbeatFunction = null;
 			_nextHeartbeatTime = 0;
@@ -272,8 +184,6 @@ package artcustomer.maxima.engine {
 			_totalMemory = 0;
 			_onRendering = false;
 			_isConstruct = false;
-			
-			__instance = null;
 			
 			super.destroy();
 		}
@@ -302,20 +212,6 @@ package artcustomer.maxima.engine {
 				_state = RenderEngineState.RENDERENGINE_OFF;
 				_onRendering = false;
 			}
-		}
-		
-		
-		/**
-		 * Instantiate RenderEngine.
-		 */
-		public static function getInstance():RenderEngine {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new RenderEngine();
-				__allowInstantiation = false;
-			}
-			
-			return __instance;
 		}
 		
 		

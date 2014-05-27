@@ -21,6 +21,7 @@ package artcustomer.maxima.events {
 		public static const LOADING_ERROR:String = 'loadingError';
 		public static const LOADING_COMPLETE:String = 'loadingComplete';
 		
+		private var _id:String;
 		private var _description:String;
 		private var _bytesLoaded:Number;
 		private var _bytesTotal:Number;
@@ -34,13 +35,15 @@ package artcustomer.maxima.events {
 		 * @param	type
 		 * @param	bubbles
 		 * @param	cancelable
+		 * @param	id
 		 * @param	description
 		 * @param	bytesLoaded
 		 * @param	bytesTotal
 		 * @param	progress
 		 * @param	error
 		 */
-		public function AssetsLoaderEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, description:String = null, bytesLoaded:Number = 0, bytesTotal:Number = 0, progress:Number = 0, error:String = null) {
+		public function AssetsLoaderEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, id:String = null, description:String = null, bytesLoaded:Number = 0, bytesTotal:Number = 0, progress:Number = 0, error:String = null) {
+			_id = id;
 			_description = description;
 			_bytesLoaded = bytesLoaded;
 			_bytesTotal = bytesTotal;
@@ -56,7 +59,7 @@ package artcustomer.maxima.events {
 		 * @return
 		 */
 		public override function clone():Event {
-			return new AssetsLoaderEvent(type, bubbles, cancelable, _description, _bytesLoaded, _bytesTotal, _progress, _error);
+			return new AssetsLoaderEvent(type, bubbles, cancelable, _id, _description, _bytesLoaded, _bytesTotal, _progress, _error);
 		}
 		
 		/**
@@ -65,9 +68,16 @@ package artcustomer.maxima.events {
 		 * @return
 		 */
 		public override function toString():String {
-			return formatToString("AssetsLoaderEvent", "type", "bubbles", "cancelable", "eventPhase", "description", "bytesLoaded", "bytesTotal", "progress", "error"); 
+			return formatToString("AssetsLoaderEvent", "type", "bubbles", "cancelable", "eventPhase", "id", "description", "bytesLoaded", "bytesTotal", "progress", "error"); 
 		}
 		
+		
+		/**
+		 * @private
+		 */
+		public function get id():String {
+			return _id;
+		}
 		
 		/**
 		 * @private

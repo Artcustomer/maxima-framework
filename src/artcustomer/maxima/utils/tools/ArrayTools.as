@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2012 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
@@ -26,8 +26,12 @@ package artcustomer.maxima.utils.tools {
 			if (!array) return null;
 			
 			var newArray:Array = new Array();
+			var i:int = 0;
+			var length:int = array.length;
+			var line:*;
 			
-			for each (var line:* in array) {
+			for (i ; i < length ; ++i) {
+				line = array[i];
 				newArray.push(line);
 			}
 			
@@ -59,6 +63,34 @@ package artcustomer.maxima.utils.tools {
 			}
 			
 			return true;
+		}
+		
+		/**
+		 * Add array data in destination array.
+		 * 
+		 * @param	srcArray
+		 * @param	destArray
+		 * @return
+		 */
+		public static function add(srcArray:Array, destArray:Array):Array {
+			var i:int = 0;
+			var length:int = srcArray.length;
+			
+			for (i ; i < length ; i++) {
+				destArray.push(srcArray[i]);
+			}
+			
+			return destArray;
+		}
+		
+		/**
+		 * Remove index from array.
+		 * 
+		 * @param	srcArray
+		 * @param	index
+		 */
+		public static function removeAt(srcArray:Array, index:int):void {
+			srcArray.splice(index, 1);
 		}
 	}
 }

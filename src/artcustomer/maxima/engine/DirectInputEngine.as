@@ -32,9 +32,6 @@ package artcustomer.maxima.engine {
 	 * @author David Massenot
 	 */
 	public class DirectInputEngine extends AbstractCoreEngine {
-		private static var __instance:DirectInputEngine;
-		private static var __allowInstantiation:Boolean;
-		
 		private var _gameControlsMap:GameControlsMap;
 		
 		
@@ -43,12 +40,6 @@ package artcustomer.maxima.engine {
 		 */
 		public function DirectInputEngine() {
 			super();
-			
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_SCOREENGINE_CREATE);
-				
-				return;
-			}
 		}
 		
 		//---------------------------------------------------------------------
@@ -71,6 +62,10 @@ package artcustomer.maxima.engine {
 			this.context.addEventListener(GameInputEvent.INPUT_TOUCH_END, handleInputs, false, 0, true);
 			this.context.addEventListener(GameInputEvent.INPUT_TOUCH_MOVE, handleInputs, false, 0, true);
 			this.context.addEventListener(GameInputEvent.INPUT_TOUCH_TAP, handleInputs, false, 0, true);
+			this.context.addEventListener(GameInputEvent.INPUT_PAD_PRESS, handleInputs, false, 0, true);
+			this.context.addEventListener(GameInputEvent.INPUT_PAD_RELEASE, handleInputs, false, 0, true);
+			this.context.addEventListener(GameInputEvent.INPUT_PAD_REPEAT, handleInputs, false, 0, true);
+			this.context.addEventListener(GameInputEvent.INPUT_PAD_FAST_REPEAT, handleInputs, false, 0, true);
 		}
 		
 		/**
@@ -89,6 +84,10 @@ package artcustomer.maxima.engine {
 			this.context.removeEventListener(GameInputEvent.INPUT_TOUCH_END, handleInputs);
 			this.context.removeEventListener(GameInputEvent.INPUT_TOUCH_MOVE, handleInputs);
 			this.context.removeEventListener(GameInputEvent.INPUT_TOUCH_TAP, handleInputs);
+			this.context.removeEventListener(GameInputEvent.INPUT_PAD_PRESS, handleInputs);
+			this.context.removeEventListener(GameInputEvent.INPUT_PAD_RELEASE, handleInputs);
+			this.context.removeEventListener(GameInputEvent.INPUT_PAD_REPEAT, handleInputs);
+			this.context.removeEventListener(GameInputEvent.INPUT_PAD_FAST_REPEAT, handleInputs);
 		}
 		
 		//---------------------------------------------------------------------
@@ -146,6 +145,30 @@ package artcustomer.maxima.engine {
 					eventType = DirectInputEvent.ON_CONTROL_RELEASED;
 					break;
 					
+				case(GameInputEvent.INPUT_PAD_PRESS):
+					keyCode = e.nativeEvent.type;
+					controlType = ControlType.GAMEPAD;
+					eventType = DirectInputEvent.ON_CONTROL_PRESSED;
+					break;
+					
+				case(GameInputEvent.INPUT_PAD_RELEASE):
+					keyCode = e.nativeEvent.type;
+					controlType = ControlType.GAMEPAD;
+					eventType = DirectInputEvent.ON_CONTROL_RELEASED;
+					break;
+					
+				case(GameInputEvent.INPUT_PAD_REPEAT):
+					keyCode = e.nativeEvent.type;
+					controlType = ControlType.GAMEPAD;
+					eventType = DirectInputEvent.ON_CONTROL_REPEATED;
+					break;
+					
+				case(GameInputEvent.INPUT_PAD_FAST_REPEAT):
+					keyCode = e.nativeEvent.type;
+					controlType = ControlType.GAMEPAD;
+					eventType = DirectInputEvent.ON_CONTROL_FAST_REPEATED;
+					break;
+					
 				default:
 					keyCode = null;
 					controlType = null;
@@ -154,46 +177,6 @@ package artcustomer.maxima.engine {
 			}
 			
 			if (keyCode) processToControlInjection(eventType, controlType, keyCode);
-		}
-		
-		//---------------------------------------------------------------------
-		//  GameControlsMap
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupGameControlsMap():void {
-			_gameControlsMap = new GameControlsMap();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyGameControlsMap():void {
-			_gameControlsMap.destroy();
-			_gameControlsMap = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function addControlInGameControlsMap(action:String, table:ControlTable):void {
-			_gameControlsMap.addControl(action, table);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function removeControlInGameControlsMap(action:String):void {
-			_gameControlsMap.removeControl(action);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function getControlByKeyInGameControlsMap(keyCode:String, controlType:String):String {
-			return _gameControlsMap.getControlByKey(keyCode, controlType);
 		}
 		
 		//---------------------------------------------------------------------
@@ -208,7 +191,7 @@ package artcustomer.maxima.engine {
 			var gameControl:IGameControl;
 			var isValidControl:Boolean;
 			
-			action = getControlByKeyInGameControlsMap(inputCode, controlType);
+			action = _gameControlsMap.getControlByKey(inputCode, controlType);
 			
 			if (!action) return;
 			
@@ -258,14 +241,17 @@ package artcustomer.maxima.engine {
 			super.setup();
 			
 			listenEvents();
-			setupGameControlsMap();
+			
+			_gameControlsMap = new GameControlsMap();
 		}
 		
 		/**
 		 * Destructor
 		 */
 		override internal function destroy():void {
-			destroyGameControlsMap();
+			_gameControlsMap.destroy();
+			_gameControlsMap = null;
+			
 			unlistenEvents();
 			
 			super.destroy();
@@ -279,7 +265,7 @@ package artcustomer.maxima.engine {
 		 * @param	table
 		 */
 		public function mapControl(objectName:String, action:String, table:ControlTable):void {
-			addControlInGameControlsMap(action, table);
+			_gameControlsMap.addControl(action, table);
 		}
 		
 		/**
@@ -289,21 +275,14 @@ package artcustomer.maxima.engine {
 		 * @param	action
 		 */
 		public function unmapControl(objectName:String, action:String):void {
-			removeControlInGameControlsMap(action);
+			_gameControlsMap.removeControl(action);
 		}
 		
-		
 		/**
-		 * Instantiate DirectInputEngine.
+		 * Unmap all controls.
 		 */
-		public static function getInstance():DirectInputEngine {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new DirectInputEngine();
-				__allowInstantiation = false;
-			}
-			
-			return __instance;
+		public function unmapAllControls():void {
+			_gameControlsMap.clear();
 		}
 	}
 }

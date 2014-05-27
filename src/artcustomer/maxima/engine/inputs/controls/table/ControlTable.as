@@ -27,21 +27,13 @@ package artcustomer.maxima.engine.inputs.controls.table {
 		 * Constructor
 		 */
 		public function ControlTable() {
-			setupTable();
-			
+			_table = new Dictionary();
 			_numControls = 0;
 		}
 		
 		//---------------------------------------------------------------------
 		//  Table
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupTable():void {
-			_table = new Dictionary();
-		}
 		
 		/**
 		 * @private
@@ -55,21 +47,14 @@ package artcustomer.maxima.engine.inputs.controls.table {
 			}
 		}
 		
-		/**
-		 * @private
-		 */
-		private function destroyTable():void {
-			_table = null;
-		}
-		
 		
 		/**
 		 * Destructor
 		 */
 		public function destroy():void {
 			disposeTable();
-			destroyTable();
 			
+			_table = null;
 			_numControls = 0;
 		}
 		

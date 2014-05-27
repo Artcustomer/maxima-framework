@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2014 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
  */
 
-package artcustomer.maxima.states {
+package artcustomer.maxima.process.states {
 	import flash.utils.Dictionary;
 	
 	import artcustomer.maxima.base.IDestroyable;
-	import artcustomer.maxima.states.state.State;
+	import artcustomer.maxima.process.states.state.State;
 	
 	
 	/**
@@ -28,26 +28,12 @@ package artcustomer.maxima.states {
 		 * Constructor
 		 */
 		public function StateMachine() {
-			setupStates();
+			_states = new Dictionary();
 		}
 		
 		//---------------------------------------------------------------------
 		//  States
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupStates():void {
-			_states = new Dictionary();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyStates():void {
-			_states = null;
-		}
 		
 		/**
 		 * @private
@@ -58,13 +44,6 @@ package artcustomer.maxima.states {
 			for (id in _states) {
 				disposeState(_states[id] as State);
 			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function createState(id:String, entry:Function, exit:Function):State {
-			return new State(id, entry, exit);
 		}
 		
 		/**
@@ -83,8 +62,8 @@ package artcustomer.maxima.states {
 		 */
 		public function destroy():void {
 			disposeStates();
-			destroyStates();
 			
+			_states = null;
 			_currentState = null;
 			_numStates = 0;
 		}
@@ -99,7 +78,7 @@ package artcustomer.maxima.states {
 		 */
 		public final function addState(id:String, entry:Function, exit:Function):Boolean {
 			if (!_states[id]) {
-				_states[id] = createState(id, entry, exit);
+				_states[id] = new State(id, entry, exit);
 				_numStates++;
 				
 				return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2014 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
@@ -7,19 +7,26 @@
 
 package artcustomer.maxima.context {
 	import flash.display.Stage;
-	import flash.display.StageDisplayState;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.display.Bitmap;
+	import flash.display.NativeMenu;
+	import flash.display.StageDisplayState;
+	import flash.display.StageScaleMode;
+	import flash.display.StageAlign;
+	import flash.display.StageQuality;
 	import flash.events.Event;
 	import flash.events.UncaughtErrorEvent;
+	import flash.geom.Rectangle;
 	import flash.utils.getQualifiedClassName;
+	import flash.system.Capabilities;
 	
 	import artcustomer.maxima.context.logo.*;
 	import artcustomer.maxima.context.menu.*;
 	import artcustomer.maxima.events.*;
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.utils.consts.*;
+	import artcustomer.maxima.utils.tools.*;
 	
 	[Event(name = "gameResize", type = "artcustomer.maxima.events.GameEvent")]
 	[Event(name = "gameNormalScreen", type = "artcustomer.maxima.events.GameEvent")]
@@ -38,14 +45,24 @@ package artcustomer.maxima.context {
 	 */
 	public class InteractiveContext extends EventContext implements IGameContext {
 		private static const FULL_CLASS_NAME:String = 'artcustomer.maxima.context::InteractiveContext';
+		private static const CONTEXT_DEFAULT_WIDTH:int = 960;
+		private static const CONTEXT_DEFAULT_HEIGHT:int = 540;
 		
 		private var _contextView:DisplayObjectContainer;
 		private var _contextWidth:int;
 		private var _contextHeight:int;
-		private var _contextMinWidth:int;
-		private var _contextMinHeight:int;
+		private var _fullScreenWidth:int;
+		private var _fullScreenHeight:int;
+		private var _stageWidth:int;
+		private var _stageHeight:int;
+		private var _sceneWidth:int;
+		private var _sceneHeight:int;
+		private var _scaleFactorConfiguration:int;
+		private var _safeContentBounds:Rectangle;
 		private var _contextPosition:String;
 		private var _scaleToStage:Boolean;
+		private var _screenOrientation:String;
+		private var _scaleFactor:Number;
 		
 		private var _viewPortContainer:Sprite;
 		private var _headUpContainer:Sprite;
@@ -63,6 +80,10 @@ package artcustomer.maxima.context {
 		private var _isFocusOnStage:Boolean;
 		private var _isFullScreen:Boolean;
 		
+		protected var _isHD:Boolean;
+		protected var _isTablet:Boolean;
+		protected var _isDesktop:Boolean;
+		
 		
 		/**
 		 * Constructor
@@ -71,50 +92,17 @@ package artcustomer.maxima.context {
 			_allowSetContextView = true;
 			
 			_contextView = null;
-			_contextWidth = 1280;
-			_contextHeight = 800;
-			_contextMinWidth = 800;
-			_contextMinHeight = 600;
+			_contextWidth = CONTEXT_DEFAULT_WIDTH;
+			_contextHeight = CONTEXT_DEFAULT_HEIGHT;
+			_scaleFactorConfiguration = StageTools.SCALEFACTOR_CONFIGURATION_1;
 			_contextPosition = ContextPosition.TOP_LEFT;
 			_scaleToStage = true;
-			_isFullScreen = true;
+			_screenOrientation = ScreenOrientation.LANDSCAPE;
+			_safeContentBounds = new Rectangle();
 			
 			super();
 			
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_INTERACTIVECONTEXT_CONSTRUCTOR);
-		}
-		
-		//---------------------------------------------------------------------
-		//  Initialize
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function init():void {
-			_logoAlign = LogoPosition.TOP_LEFT;
-			_logoVerticalMargin = 10;
-			_logoHorizontalMargin = 10;
-			_isLogoShow = false;
-			_isMenuShow = false;
-		}
-		
-		//---------------------------------------------------------------------
-		//  LoaderInfo
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupLoaderInfo():void {
-			if (_contextView.loaderInfo) _contextView.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, handleUncaughtError, false, 0, true);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyLoaderInfo():void {
-			if (_contextView.loaderInfo) _contextView.loaderInfo.uncaughtErrorEvents.removeEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, handleUncaughtError);
 		}
 		
 		//---------------------------------------------------------------------
@@ -153,13 +141,11 @@ package artcustomer.maxima.context {
 			
 			var stageWidth:int = _contextView.stage.stageWidth;
 			var stageHeight:int = _contextView.stage.stageHeight;
-			var contextWidth:int = Math.max(_contextMinWidth, stageWidth);
-			var contextHeight:int = Math.max(_contextMinHeight, stageHeight);
 			
 			e.preventDefault();
 			
 			switch (e.type) {
-				case('activate'):
+				case(Event.ACTIVATE):
 					if (!_isFocusOnStage) {
 						_isFocusOnStage = true;
 						
@@ -167,7 +153,7 @@ package artcustomer.maxima.context {
 					}
 					break;
 					
-				case('deactivate'):
+				case(Event.DEACTIVATE):
 					if (_isFocusOnStage) {
 						_isFocusOnStage = false;
 						
@@ -175,16 +161,20 @@ package artcustomer.maxima.context {
 					}
 					break;
 					
-				case('resize'):
-					setupSize(contextWidth, contextHeight);
-					refreshView();
+				case(Event.RESIZE):
+					if (!_contextView) return;
+					
+					updateSize();
+					updateSceneSize();
 					setLogoPosition();
+					
+					this.refreshView();
 					
 					if (this.instance) this.instance.resize();
 					if (_scaleToStage) this.dispatchEvent(new GameEvent(GameEvent.GAME_RESIZE, false, false, this, contextWidth, contextHeight, stageWidth, stageHeight));
 					break;
 					
-				case('fullScreen'):
+				case(Event.FULLSCREEN):
 					if (_contextView.stage.displayState == StageDisplayState.NORMAL) {
 						this.dispatchEvent(new GameEvent(GameEvent.GAME_NORMAL_SCREEN, false, false, this, contextWidth, contextHeight, stageWidth, stageHeight));
 					} else if (_contextView.stage.displayState == StageDisplayState.FULL_SCREEN) {
@@ -206,11 +196,11 @@ package artcustomer.maxima.context {
 			var error:Error = e.error as Error;
 			var errorID:int = error.errorID;
 			var errorName:String = ErrorName.FLASH_ERROR;
-			var frameworkError:int = errorID / GameError.ERROR_ID;
+			var gameError:int = errorID / IllegalGameError.ERROR_ID;
 			var illegalError:int = errorID / IllegalGameError.ERROR_ID;
 			var eventType:String = GameErrorEvent.ERROR;
 			
-			if (frameworkError == 1) {
+			if (gameError == 1) {
 				eventType = GameErrorEvent.GAME_ERROR;
 				errorName = ErrorName.GAME_ERROR;
 			}
@@ -224,80 +214,8 @@ package artcustomer.maxima.context {
 		}
 		
 		//---------------------------------------------------------------------
-		//  ViewPortContainer
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupViewPortContainer():void {
-			_viewPortContainer = new Sprite();
-			
-			_contextView.addChild(_viewPortContainer);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyViewPortContainer():void {
-			if (_viewPortContainer) {
-				_contextView.removeChild(_viewPortContainer);
-				
-				_viewPortContainer = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  HeadUpContainer
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupHeadUpContainer():void {
-			_headUpContainer = new Sprite();
-			
-			_contextView.addChild(_headUpContainer);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyHeadUpContainer():void {
-			if (_headUpContainer) {
-				_contextView.removeChild(_headUpContainer);
-				
-				_headUpContainer = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
 		//  Logo
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupLogo():void {
-			if (!_logo) {
-				_logo = new GameContextLogo();
-				_logo.setup();
-				
-				if (_headUpContainer && _logo.bitmap) _headUpContainer.addChild(_logo.bitmap);
-			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyLogo():void {
-			if (_logo) {
-				if (_headUpContainer && _logo.bitmap) _headUpContainer.removeChild(_logo.bitmap);
-				
-				_logo.destroy();
-				_logo = null;
-			}
-		}
 		
 		/**
 		 * @private
@@ -314,102 +232,179 @@ package artcustomer.maxima.context {
 		}
 		
 		//---------------------------------------------------------------------
-		//  Menu
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupMenu():void {
-			if (!_menu) {
-				_menu = new GameContextMenu();
-				_menu.setup();
-			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyMenu():void {
-			if (_menu) {
-				_menu.destroy();
-				_menu = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
 		//  Size
 		//---------------------------------------------------------------------
 		
 		/**
 		 * @private
 		 */
-		private function initSize():void {
-			if (_scaleToStage) {
-				if (_contextView) {
-					_contextWidth = _contextView.stage.stageWidth;
-					_contextHeight = _contextView.stage.stageHeight;
-				}
+		private function setScaleFactor():void {
+			if (_isDesktop) {
+				var customScaleFactor:Number = this.defineScaleFactor();
+				
+				_scaleFactor = customScaleFactor > 0 ? customScaleFactor : StageTools.getScaleFactor(_contextWidth, _contextHeight, _scaleFactorConfiguration);
+			} else {
+				_scaleFactor = 1;
 			}
 		}
 		
 		/**
 		 * @private
 		 */
-		private function setupSize(width:int, height:int):void {
+		private function updateSize():void {
+			_fullScreenWidth = this.stageReference.fullScreenWidth;
+			_fullScreenHeight = this.stageReference.fullScreenHeight;
+			_stageWidth = this.stageReference.stageWidth;
+			_stageHeight = this.stageReference.stageHeight;
+			
 			if (_scaleToStage) {
-				if (_contextView) {
-					_contextWidth = width;
-					_contextHeight = height;
-				}
+				_contextWidth = _isDesktop == true ? _fullScreenWidth : _stageWidth;
+				_contextHeight = _isDesktop == true ? _fullScreenHeight : _stageHeight;
+			}
+			
+			if (_contextWidth >= _contextHeight) {
+				_screenOrientation = ScreenOrientation.LANDSCAPE;
+			} else {
+				_screenOrientation = ScreenOrientation.PORTRAIT;
 			}
 		}
 		
+		/**
+		 * @private
+		 */
+		private function updateSceneSize():void {
+			if (_scaleFactor > 0) {
+				_sceneWidth = _contextWidth / _scaleFactor;
+				_sceneHeight = _contextHeight / _scaleFactor;
+			}
+			
+			_safeContentBounds.x = 0;
+			_safeContentBounds.y = 0;
+			_safeContentBounds.width = _sceneWidth;
+			_safeContentBounds.height = _sceneHeight;
+		}
+		
+		
+		/**
+		 * When FlashPlayer receive focus. Can be overrided.
+		 */
+		protected function focus():void {
+			
+		}
+		
+		/**
+		 * When FlashPlayer lose focus. Can be overrided.
+		 */
+		protected function unfocus():void {
+			
+		}
+		
+		/**
+		 * Define scalefactor. Can be overrided in order to define your own ScaleFactor.
+		 * 
+		 * @see StageTools
+		 * @return
+		 */
+		protected function defineScaleFactor():Number {
+			return 0;
+		}
 		
 		/**
 		 * Setup InteractiveContext.
 		 */
 		override public function setup():void {
-			init();
+			_contextView.stage.scaleMode = StageScaleMode.NO_SCALE;
+			_contextView.stage.quality = StageQuality.HIGH;
+			_contextView.stage.align = StageAlign.TOP_LEFT;
+			
+			_isLogoShow = false;
+			_isDesktop = Capabilities.playerType == 'Desktop' ? true : false;
+			_isTablet = MobileTools.isTablet(this.stageReference);
 			
 			super.setup();
 			
 			listenStageEvents();
-			setupLoaderInfo();
-			setupViewPortContainer();
-			setupHeadUpContainer();
-			initSize();
-			refreshView();
-			showLogo();
+			
+			if (_contextView.loaderInfo) _contextView.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, handleUncaughtError, false, 0, true);
+			
+			_viewPortContainer = new Sprite();
+			_contextView.addChild(_viewPortContainer);
+			
+			_headUpContainer = new Sprite();
+			_contextView.addChild(_headUpContainer);
+			
+			updateSize();
+			setScaleFactor();
+			updateSceneSize();
+			
+			this.refreshView();
+			this.showLogo();
 		}
 		
 		/**
 		 * Destroy InteractiveContext.
 		 */
 		override public function destroy():void {
+			this.hideLogo();
+			
+			if (_viewPortContainer) {
+				_contextView.removeChild(_viewPortContainer);
+				_viewPortContainer = null;
+			}
+			
+			if (_headUpContainer) {
+				_contextView.removeChild(_headUpContainer);
+				_headUpContainer = null;
+			}
+			
 			unlistenStageEvents();
-			hideLogo();
-			destroyViewPortContainer();
-			destroyHeadUpContainer();
-			destroyLoaderInfo();
+			
+			if (_contextView.loaderInfo) _contextView.loaderInfo.uncaughtErrorEvents.removeEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, handleUncaughtError);
 			
 			_contextView = null;
 			_contextWidth = 0;
 			_contextHeight = 0;
-			_contextMinWidth = 0;
-			_contextMinHeight = 0;
+			_fullScreenWidth = 0;
+			_fullScreenHeight = 0;
 			_contextPosition = null;
 			_scaleToStage = false;
+			_screenOrientation = null;
+			_scaleFactor = 0;
 			_viewPortContainer = null;
-			_logoAlign = null;
-			_logoVerticalMargin = 0;
-			_logoHorizontalMargin = 0;
 			_allowSetContextView = false;
 			_isLogoShow = false;
 			_isMenuShow = false;
 			_isFocusOnStage = false;
+			_isFullScreen = false;
+			_isHD = false;
+			_isTablet = false;
+			_isDesktop = false;
 			
 			super.destroy();
+		}
+		
+		/**
+		 * Force to terminate application. Override it !
+		 * 
+		 * @param	errorCode
+		 */
+		public function forceToExit(errorCode:int = 0):void {
+			
+		}
+		
+		/**
+		 * Set safe content bounds.
+		 * 
+		 * @param	pX
+		 * @param	pY
+		 * @param	pWidth
+		 * @param	pHeight
+		 */
+		public function setSafeContentBounds(pX:int, pY:int, pWidth:int, pHeight:int):void {
+			_safeContentBounds.x = pX;
+			_safeContentBounds.y = pY;
+			_safeContentBounds.width = pWidth;
+			_safeContentBounds.height = pHeight;
 		}
 		
 		/**
@@ -472,7 +467,13 @@ package artcustomer.maxima.context {
 		 */
 		public function showLogo():void {
 			if (!_isLogoShow) {
-				setupLogo();
+				if (!_logo) {
+					_logo = new GameContextLogo();
+					_logo.setup();
+					
+					if (_headUpContainer && _logo.bitmap) _headUpContainer.addChild(_logo.bitmap);
+				}
+				
 				setLogoPosition();
 				
 				_isLogoShow = true;
@@ -484,7 +485,12 @@ package artcustomer.maxima.context {
 		 */
 		public function hideLogo():void {
 			if (_isLogoShow) {
-				destroyLogo();
+				if (_logo) {
+					if (_headUpContainer && _logo.bitmap) _headUpContainer.removeChild(_logo.bitmap);
+					
+					_logo.destroy();
+					_logo = null;
+				}
 				
 				_isLogoShow = false;
 			}
@@ -495,7 +501,10 @@ package artcustomer.maxima.context {
 		 */
 		public function showMenu():void {
 			if (!_isMenuShow) {
-				setupMenu();
+				if (!_menu) {
+					_menu = new GameContextMenu();
+					_menu.setup();
+				}
 				
 				_isMenuShow = true;
 			}
@@ -506,7 +515,10 @@ package artcustomer.maxima.context {
 		 */
 		public function hideMenu():void {
 			if (_isMenuShow) {
-				destroyMenu();
+				if (_menu) {
+					_menu.destroy();
+					_menu = null;
+				}
 				
 				_isMenuShow = false;
 			}
@@ -542,6 +554,15 @@ package artcustomer.maxima.context {
 				
 				this.stageReference.displayState = StageDisplayState.FULL_SCREEN;
 			}
+		}
+		
+		/**
+		 * Test if context is on debug mode
+		 * 
+		 * @return
+		 */
+		public function isDebugMode():Boolean {
+			return false;
 		}
 		
 		
@@ -594,29 +615,64 @@ package artcustomer.maxima.context {
 		/**
 		 * @private
 		 */
-		public function set contextMinWidth(value:int):void {
-			_contextMinWidth = value;
+		public function set scaleFactorConfiguration(value:int):void {
+			_scaleFactorConfiguration = value;
 		}
 		
 		/**
 		 * @private
 		 */
-		public function get contextMinWidth():int {
-			return _contextMinWidth;
+		public function get scaleFactorConfiguration():int {
+			return _scaleFactorConfiguration;
 		}
 		
 		/**
 		 * @private
 		 */
-		public function set contextMinHeight(value:int):void {
-			_contextMinHeight = value;
+		public function get fullScreenWidth():int {
+			return _fullScreenWidth;
 		}
 		
 		/**
 		 * @private
 		 */
-		public function get contextMinHeight():int {
-			return _contextMinHeight;
+		public function get fullScreenHeight():int {
+			return _fullScreenHeight;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get stageWidth():int {
+			return _stageWidth;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get stageHeight():int {
+			return _stageHeight;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get sceneWidth():int {
+			return _sceneWidth;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get sceneHeight():int {
+			return _sceneHeight;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get safeContentBounds():Rectangle {
+			return _safeContentBounds;
 		}
 		
 		/**
@@ -680,6 +736,41 @@ package artcustomer.maxima.context {
 		 */
 		public function get isFullScreen():Boolean {
 			return _isFullScreen;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get screenOrientation():String {
+			return _screenOrientation;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get scaleFactor():Number {
+			return _scaleFactor;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get isHD():Boolean {
+			return _isHD;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get isDesktop():Boolean {
+			return _isDesktop;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get isTablet():Boolean {
+			return _isTablet;
 		}
 	}
 }

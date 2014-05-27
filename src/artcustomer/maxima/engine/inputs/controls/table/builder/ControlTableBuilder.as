@@ -26,19 +26,12 @@ package artcustomer.maxima.engine.inputs.controls.table.builder {
 		 * Constructor
 		 */
 		public function ControlTableBuilder() {
-			createStack();
+			_stack = new Array();
 		}
 		
 		//---------------------------------------------------------------------
 		//  Stack
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function createStack():void {
-			_stack = new Array();
-		}
 		
 		/**
 		 * @private
@@ -49,21 +42,14 @@ package artcustomer.maxima.engine.inputs.controls.table.builder {
 			}
 		}
 		
-		/**
-		 * @private
-		 */
-		private function destroyStack():void {
-			_stack = null;
-		}
-		
 		
 		/**
 		 * Destructor
 		 */
 		public function destroy():void {
 			releaseStack();
-			destroyStack();
 			
+			_stack = null;
 			_numControls = 0;
 		}
 		

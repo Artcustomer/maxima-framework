@@ -7,23 +7,11 @@
 
 package artcustomer.maxima.engine {
 	import flash.events.Event;
-	import flash.events.IOErrorEvent;
-	import flash.events.ProgressEvent;
 	import flash.media.Sound;
-	import flash.media.SoundChannel;
-	import flash.media.SoundTransform;
-	import flash.media.SoundMixer;
-	import flash.media.SoundLoaderContext;
-	import flash.net.URLRequest;
 	
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.events.*;
-	
-	[Event(name="onPlaySound", type="artcustomer.maxima.events.SFXEngineEvent")]
-	[Event(name="onStopSound", type="artcustomer.maxima.events.SFXEngineEvent")]
-	[Event(name="onSoundError", type="artcustomer.maxima.events.SFXEngineEvent")]
-	[Event(name="onSoundComplete", type="artcustomer.maxima.events.SFXEngineEvent")]
-	[Event(name="onSoundID3", type="artcustomer.maxima.events.SFXEngineEvent")]
+	import artcustomer.maxima.engine.sounds.*;
 	
 	
 	/**
@@ -34,20 +22,13 @@ package artcustomer.maxima.engine {
 	public class SFXEngine extends AbstractCoreEngine {
 		private static const BUFFER_TIME:int = 5000;
 		
-		private static var __instance:SFXEngine;
-		private static var __allowInstantiation:Boolean;
-		
-		private var _sound:Sound;
-		private var _soundChannel:SoundChannel;
-		private var _soundLoaderContext:SoundLoaderContext;
-		private var _soundTransform:SoundTransform;
-		
-		private var _tempStream:String;
+		private var _channelFactory:ChannelFactory;
+		private var _soundsCache:SoundsCache;
 		
 		private var _volume:Number;
 		private var _pan:Number;
 		
-		private var _isPlaying:Boolean;
+		private var _isMute:Boolean;
 		
 		
 		/**
@@ -55,231 +36,17 @@ package artcustomer.maxima.engine {
 		 */
 		public function SFXEngine() {
 			super();
-			
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_SFXENGINE_CREATE);
-				
-				return;
-			}
 		}
 		
 		//---------------------------------------------------------------------
-		//  Initialize
+		//  Channels
 		//---------------------------------------------------------------------
 		
 		/**
 		 * @private
 		 */
-		private function init():void {
-			_volume = 1;
-			_pan = 0;
-			_isPlaying = false;
-		}
-		
-		//---------------------------------------------------------------------
-		//  SoundChannel
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupSoundChannel(startTime:Number = 0, loops:int = 0):void {
-			if (!_sound) return;
-			
-			_soundChannel = _sound.play(startTime, loops);
-			_soundChannel.addEventListener(Event.SOUND_COMPLETE, handleSound, false, 0, true);
-			
-			dispatchPlayEvent();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroySoundChannel():void {
-			if (_soundChannel) {
-				_soundChannel.removeEventListener(Event.SOUND_COMPLETE, handleSound);
-				_soundChannel.stop();
-				_soundChannel = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  Sound
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupSound():void {
-			if (!_sound) _sound = new Sound();
-			if (!_sound.hasEventListener(Event.ID3)) _sound.addEventListener(Event.ID3, handleSound, false, 0, true);
-			if (!_sound.hasEventListener(IOErrorEvent.IO_ERROR)) _sound.addEventListener(IOErrorEvent.IO_ERROR, handleSoundError, false, 0, true);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function resetSound(sound:Sound):void {
-			if (!sound) return;
-			
-			_sound = sound;
-			_sound.addEventListener(Event.ID3, handleSound, false, 0, true);
-			_sound.addEventListener(IOErrorEvent.IO_ERROR, handleSoundError, false, 0, true);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroySound():void {
-			if (_sound) {
-				_sound.removeEventListener(Event.ID3, handleSound);
-				_sound.removeEventListener(IOErrorEvent.IO_ERROR, handleSoundError);
-				
-				try {
-					_sound.close();
-				} catch (er:Error) {
-					
-				}
-				
-				_sound = null;
-			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function loadSound():void {
-			if (_sound) {
-				_sound.load(new URLRequest(_tempStream), _soundLoaderContext);
-				
-				_tempStream = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  SoundLoaderContext
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupSoundLoaderContext():void {
-			_soundLoaderContext = new SoundLoaderContext(BUFFER_TIME, true);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroySoundLoaderContext():void {
-			_soundLoaderContext = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  SoundTransform
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupSoundTransform():void {
-			_soundTransform = new SoundTransform();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroySoundTransform():void {
-			_soundTransform = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function applySoundTransform():void {
-			if (!_soundTransform || !_soundChannel) return;
-			
-			_soundTransform.volume = _volume;
-			_soundTransform.pan = _pan;
-			_soundChannel.soundTransform = _soundTransform;
-		}
-		
-		//---------------------------------------------------------------------
-		//  Listeners
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function handleSound(e:Event):void {
-			switch (e.type) {
-				case('id3'):
-					dispatchID3Event();
-					break;
-					
-				case('soundComplete'):
-					_isPlaying = false;
-					
-					dispatchCompleteEvent();
-					break;
-					
-				default:
-					break;
-			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function handleSoundError(e:IOErrorEvent):void {
-			switch (e.type) {
-				case('ioError'):
-					_isPlaying = false;
-					
-					dispatchErrorEvent(e.text);
-					break;
-					
-				default:
-					break;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  Event Dispatching
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function dispatchPlayEvent():void {
-			this.dispatchEvent(new SFXEngineEvent(SFXEngineEvent.ON_PLAY_SOUND, false, false, _tempStream));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchStopEvent():void {
-			this.dispatchEvent(new SFXEngineEvent(SFXEngineEvent.ON_STOP_SOUND, false, false, _tempStream));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchErrorEvent(error:String):void {
-			this.dispatchEvent(new SFXEngineEvent(SFXEngineEvent.ON_SOUND_ERROR, false, false, _tempStream, error));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchCompleteEvent():void {
-			this.dispatchEvent(new SFXEngineEvent(SFXEngineEvent.ON_SOUND_COMPLETE, false, false, _tempStream));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchID3Event():void {
-			this.dispatchEvent(new SFXEngineEvent(SFXEngineEvent.ON_SOUND_ID3, false, false, _tempStream));
+		private function onLoadedChannel(stream:String, sound:Sound):void {
+			_soundsCache.addSound(stream, sound);
 		}
 		
 		
@@ -291,82 +58,173 @@ package artcustomer.maxima.engine {
 			
 			super.setup();
 			
-			init();
-			setupSoundLoaderContext();
-			setupSoundTransform();
+			_volume = 1;
+			_pan = 0;
+			_isMute = false;
+			
+			_channelFactory = ChannelFactory.getInstance();
+			_soundsCache = SoundsCache.getInstance();
+			
+			this.addChannel();
 		}
 		
 		/**
 		 * Destructor
 		 */
 		override internal function destroy():void {
-			destroySound();
-			destroySoundChannel();
-			destroySoundLoaderContext();
-			destroySoundTransform();
+			_channelFactory.destroy();
+			_channelFactory = null;
 			
-			_tempStream = null;
+			_soundsCache.destroy();
+			_soundsCache = null;
+			
 			_volume = 0;
 			_pan = 0;
-			_isPlaying = false;
+			_isMute = false;
 			
 			super.destroy();
 		}
 		
+		
 		/**
-		 * Play sound with Sound object.
+		 * Add new channel at highest index.
+		 * 
+		 * @return
+		 */
+		public function addChannel():SingleChannel {
+			var channel:SingleChannel = _channelFactory.addChannel(onLoadedChannel);
+			
+			channel.setVolume(channel.volume * _volume);
+			channel.setPan(_pan);
+			
+			return channel;
+		}
+		
+		/**
+		 * Get channel at index.
+		 * 
+		 * @param	index
+		 * @return
+		 */
+		public function getChannelAt(index:int):SingleChannel {
+			return _channelFactory.getChannel(index);
+		}
+		
+		/**
+		 * Test channel at index.
+		 * 
+		 * @param	index
+		 * @return
+		 */
+		public function hasChannelAt(index:int):Boolean {
+			return _channelFactory.hasChannel(index);
+		}
+		
+		/**
+		 * Remove channel at index.
+		 * 
+		 * @param	index
+		 * @return
+		 */
+		public function disposeChannelAt(index:int):Boolean {
+			return _channelFactory.disposeChannel(index);
+		}
+		
+		/**
+		 * Play sound on channel.
 		 * 
 		 * @param	sound
+		 * @param	index : 0 is the master channel.
 		 * @param	begin
 		 * @param	loops
 		 */
-		public function playSound(sound:Sound, begin:int = 0, loops:int = 0):void {
-			if (!sound) return;
-			
-			destroySound();
-			resetSound(sound);
-			destroySoundChannel();
-			setupSoundChannel(begin, loops);
-			applySoundTransform();
-			
-			_tempStream = _sound.url;
-			_isPlaying = true;
+		public function playSoundOnChannel(sound:Sound, index:int = 0, begin:int = 0, loops:int = 0):void {
+			if (index < _channelFactory.numChannels) {
+				_channelFactory.getChannel(index).playSound(sound, begin, loops);
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
 		}
 		
 		/**
-		 * Play sound with stream URL.
+		 * Play sound by stream on channel.
 		 * 
 		 * @param	stream
+		 * @param	index : 0 is the master channel.
 		 * @param	begin
 		 * @param	loops
 		 */
-		public function playStream(stream:String, begin:int = 0, loops:int = 0):void {
-			if (!stream) return;
-			
-			_tempStream = stream;
-			
-			destroySound();
-			setupSound();
-			loadSound();
-			destroySoundChannel();
-			setupSoundChannel(begin, loops);
-			applySoundTransform();
-			
-			_isPlaying = true;
+		public function playStreamOnChannel(stream:String, index:int = 0, begin:int = 0, loops:int = 0):void {
+			if (index < _channelFactory.numChannels) {
+				if (_soundsCache.hasSound(stream)) {
+					_channelFactory.getChannel(index).playSound(_soundsCache.getSound(stream), begin, loops);
+				} else {
+					_channelFactory.getChannel(index).playStream(stream, begin, loops);
+				}
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
 		}
 		
 		/**
-		 * Set volume on sound.
+		 * Pause channel.
+		 * 
+		 * @param	index
+		 */
+		public function pauseChannel(index:int = 0):void {
+			if (index < _channelFactory.numChannels) {
+				_channelFactory.getChannel(index).pause();
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
+		}
+		
+		/**
+		 * Resume channel.
+		 * 
+		 * @param	index
+		 */
+		public function resumeChannel(index:int = 0):void {
+			if (index < _channelFactory.numChannels) {
+				_channelFactory.getChannel(index).resume();
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
+		}
+		
+		/**
+		 * Stop channel.
+		 * 
+		 * @param	index
+		 */
+		public function stopChannel(index:int = 0):void {
+			if (index < _channelFactory.numChannels) {
+				_channelFactory.getChannel(index).stop();
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
+		}
+		
+		/**
+		 * Remove all channels stored in the pool.
+		 */
+		public function clearChannelsPool():void {
+			_channelFactory.clearPool();
+		}
+		
+		/**
+		 * Set volume on master sound.
 		 * 
 		 * @param	volume : 0, volume, 1
 		 */
 		public function setVolume(volume:Number):void {
+			if (_volume == volume) return;
 			if (volume < 0) volume = 0;
 			if (volume > 1) volume = 1;
 			
 			_volume = volume;
 			
-			applySoundTransform();
+			_channelFactory.applyMasterVolume(_volume);
 		}
 		
 		/**
@@ -375,23 +233,45 @@ package artcustomer.maxima.engine {
 		 * @param	pan
 		 */
 		public function setPan(pan:Number):void {
+			if (_pan == pan) return;
+			
 			_pan = pan;
 			
-			applySoundTransform();
+			var channel:SingleChannel;
+			
+			for each (channel in _channelFactory.channels) {
+				channel.setPan(_pan);
+			}
 		}
 		
+		/**
+		 * Mute all channels.
+		 */
+		public function muteAll():void {
+			if (_isMute) return;
+			
+			_isMute = true;
+			
+			var channel:SingleChannel;
+			
+			for each (channel in _channelFactory.channels) {
+				channel.mute();
+			}
+		}
 		
 		/**
-		 * Instantiate SFXEngine.
+		 * Unmute all channels.
 		 */
-		public static function getInstance():SFXEngine {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new SFXEngine();
-				__allowInstantiation = false;
-			}
+		public function unMuteAll():void {
+			if (!_isMute) return;
 			
-			return __instance;
+			_isMute = false;
+			
+			var channel:SingleChannel;
+			
+			for each (channel in _channelFactory.channels) {
+				channel.unMute();
+			}
 		}
 		
 		
@@ -412,8 +292,8 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		public function get isPlaying():Boolean {
-			return _isPlaying;
+		public function get isMute():Boolean {
+			return _isMute;
 		}
 	}
 }

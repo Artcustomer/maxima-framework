@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2012 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
@@ -110,6 +110,35 @@ package artcustomer.maxima.utils.tools {
         }
 		
 		/**
+		 * Get shuffle values between two values.
+		 * Depends on the range.
+		 * 
+		 * @param	min
+		 * @param	max
+		 * @return	array
+		 */
+		public static function shuffleBetween(min:Number = 0, max:Number = 0):Array {
+			var baseNumber:Array = new Array();
+			var randNumber:Array = new Array();
+			var i:int;
+			var tempRandom:Number;
+			
+			for (i = min ; i <= max ; ++i) {
+				baseNumber[i] = i;
+			}
+			
+			for (i = max; i > min; i--) {
+				tempRandom = min + Math.floor(Math.random() * (i - min));
+				randNumber[i] = baseNumber[tempRandom];
+				baseNumber[tempRandom] = baseNumber[i]; 
+			}
+			
+			randNumber[min] = baseNumber[min];
+			
+			return randNumber;
+        }
+		
+		/**
 		 * Get a random angle.
 		 * 
 		 * @return
@@ -117,5 +146,16 @@ package artcustomer.maxima.utils.tools {
 		public static function randomAngle():Number {
 			return Math.random() * DEGREE360;
         }
+		
+		/**
+		 * Compute percent position.
+		 * 
+		 * @param	pBaseNumber
+		 * @param	pPercent
+		 * @return
+		 */
+		public static function getPercentPosition(pBaseNumber:Number, pPercent:Number):Number {
+			return (pBaseNumber * pPercent) / 100;;
+		}
 	}
 }

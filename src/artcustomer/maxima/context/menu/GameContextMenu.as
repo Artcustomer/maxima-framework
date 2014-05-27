@@ -51,44 +51,6 @@ package artcustomer.maxima.context.menu {
 		/**
 		 * @private
 		 */
-		private function setupContextMenu():void {
-			_titleCaption = GameContext.currentContext.instance.name;
-			_frameworkCaption = Maxima.CODE + ' ' + Maxima.VERSION;
-			
-			_urlRequest = new URLRequest(Maxima.ONLINE_DOCUMENTATION);
-			
-			_contextMenuItemTitle = new ContextMenuItem(_titleCaption, false, false);
-			_contextMenuItemFramework = new ContextMenuItem(_frameworkCaption, false, true);
-			_contextMenuItemFramework.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handleContextMenuItem, false, 0, true);
-			
-			_contextMenu = new ContextMenu();
-			_contextMenu.hideBuiltInItems();
-			_contextMenu.customItems.push(_contextMenuItemTitle);
-			_contextMenu.customItems.push(_contextMenuItemFramework);
-			
-			_container.contextMenu = _contextMenu;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyContextMenu():void {
-			_contextMenuItemTitle = null;
-			_contextMenuItemFramework.removeEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handleContextMenuItem);
-			_contextMenuItemFramework = null;
-			_urlRequest = null;
-			_titleCaption = null;
-			_frameworkCaption = null;
-			
-			if (_contextMenu) {
-				_contextMenu = null;
-				_container.contextMenu = null;
-			}
-		}
-		
-		/**
-		 * @private
-		 */
 		private function handleContextMenuItem(e:ContextMenuEvent):void {
 			switch (e.type) {
 				case(ContextMenuEvent.MENU_ITEM_SELECT):
@@ -107,14 +69,38 @@ package artcustomer.maxima.context.menu {
 		public function setup():void {
 			_container = GameContext.currentContext.contextView;
 			
-			setupContextMenu();
+			_titleCaption = GameContext.currentContext.instance.name;
+			_frameworkCaption = Maxima.CODE + ' ' + Maxima.VERSION;
+			
+			_urlRequest = new URLRequest(Maxima.ONLINE_DOCUMENTATION);
+			
+			_contextMenuItemTitle = new ContextMenuItem(_titleCaption, false, false);
+			_contextMenuItemFramework = new ContextMenuItem(_frameworkCaption, false, true);
+			_contextMenuItemFramework.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handleContextMenuItem, false, 0, true);
+			
+			_contextMenu = new ContextMenu();
+			_contextMenu.hideBuiltInItems();
+			_contextMenu.customItems.push(_contextMenuItemTitle);
+			_contextMenu.customItems.push(_contextMenuItemFramework);
+			
+			_container.contextMenu = _contextMenu;
 		}
 		
 		/**
 		 * Destructor
 		 */
 		public function destroy():void {
-			destroyContextMenu();
+			_contextMenuItemTitle = null;
+			_contextMenuItemFramework.removeEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handleContextMenuItem);
+			_contextMenuItemFramework = null;
+			_urlRequest = null;
+			_titleCaption = null;
+			_frameworkCaption = null;
+			
+			if (_contextMenu) {
+				_contextMenu = null;
+				_container.contextMenu = null;
+			}
 			
 			_container = null;
 		}

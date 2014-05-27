@@ -126,10 +126,15 @@ package artcustomer.maxima.engine.assets.data {
 			var resourceFile:ResourceFile;
 			var resourceType:ResourceType;
 			var extension:String = getExtension(source);
+			var assetClass:Class;
 			
 			for each (resourceFile in _files) {
 				for each (resourceType in resourceFile.extensions) {
-					if (extension == resourceType.extension) return new resourceFile.definition();
+					if (extension == resourceType.extension) {
+						assetClass = resourceFile.definition;
+						
+						return new assetClass();
+					}
 				}
 			}
 			

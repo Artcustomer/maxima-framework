@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2014 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
  */
 
-package artcustomer.maxima.states.state {
+package artcustomer.maxima.process.states.state {
 	import artcustomer.maxima.base.IDestroyable;
 	import artcustomer.maxima.utils.tools.StringTools;
 	

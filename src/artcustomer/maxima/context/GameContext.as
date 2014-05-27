@@ -7,17 +7,13 @@
 
 package artcustomer.maxima.context {
 	import flash.display.DisplayObjectContainer;
-	import flash.display.StageScaleMode;
-	import flash.display.StageAlign;
-	import flash.display.StageQuality;
 	import flash.events.Event;
-	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 	
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.events.*;
 	import artcustomer.maxima.engine.*;
-	import artcustomer.maxima.proxies.*;
+	import artcustomer.maxima.proxies.threads.*;
 	import artcustomer.maxima.utils.consts.*;
 	
 	[Event(name = "gameSetup", type = "artcustomer.maxima.events.GameEvent")]
@@ -35,21 +31,21 @@ package artcustomer.maxima.context {
 	public class GameContext extends ServiceContext {
 		private static const FULL_CLASS_NAME:String = 'artcustomer.maxima.context::GameContext';
 		
-		private var _engineManager:EngineManager;
+		private static var __allowInstantiation:Boolean;
+		private static var __currentContext:IGameContext;
+		
 		private var _multiThreadProxy:MultiThreadProxy;
+		private var _engineManager:EngineManager;
 		
 		private var _isContextSetup:Boolean;
 		
-		private static var __allowInstantiation:Boolean;
-		private static var __currentContext:IGameContext;
+		protected var _delayedGameEngineCreation:Boolean;
 		
 		
 		/**
 		 * Constructor
-		 * 
-		 * @param	contextView
 		 */
-		public function GameContext(contextView:DisplayObjectContainer = null) {
+		public function GameContext() {
 			_isContextSetup = false;
 			__allowInstantiation = true;
 			
@@ -57,85 +53,24 @@ package artcustomer.maxima.context {
 			
 			if (!__allowInstantiation) throw new IllegalGameError(IllegalGameError.E_CONTEXT_INSTANTIATION);
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_CONTEXT_CONSTRUCTOR);
-			if (contextView) this.contextView = contextView;
 			
 			__allowInstantiation = false;
 		}
 		
-		//---------------------------------------------------------------------
-		//  Stage
-		//---------------------------------------------------------------------
 		
 		/**
-		 * @private
+		 * Called by InteractiveContext during resizing. Don't call it !
 		 */
-		private function setupStage():void {
-			this.stageReference.scaleMode = StageScaleMode.NO_SCALE;
-			this.stageReference.quality = StageQuality.HIGH;
-			this.stageReference.align = StageAlign.TOP_LEFT;
-		}
-		
-		//---------------------------------------------------------------------
-		//  EngineManager
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupEngineManager():void {
-			_engineManager = EngineManager.getInstance();
-			_engineManager.context = this;
-			_engineManager.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyEngineManager():void {
-			_engineManager.destroy();
-			_engineManager = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function startEngineManager():void {
-			_engineManager.start();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function resetEngineManager():void {
-			_engineManager.reset();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function resizeEngineManager():void {
+		internal function resize():void {
 			_engineManager.resize();
 		}
 		
-		//---------------------------------------------------------------------
-		//  MultiThreadProxy
-		//---------------------------------------------------------------------
-		
 		/**
-		 * @private
+		 * Called when framework is ready. Override it, add entities and call start() here !
 		 */
-		private function setupMultiThreadProxy():void {
-			_multiThreadProxy = MultiThreadProxy.getInstance();
+		protected function onReady():void {
+			
 		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyMultiThreadProxy():void {
-			_multiThreadProxy.destroy();
-			_multiThreadProxy = null;
-		}
-		
 		
 		/**
 		 * Get Debug version of Context.
@@ -149,62 +84,51 @@ package artcustomer.maxima.context {
 			
 			if (!_isContextSetup) return "Setup method don't called !";
 			
-			t += '[[ ' + this.name + ' DEBUG GAME CONTEXT ]]';
+			t += '[[ DEBUG GAME CONTEXT : ' + this.name + ' ]]';
 			t += '\n';
-			t += 'Width : ' + this.contextWidth;
+			t += 'Context Width : ' + this.contextWidth;
 			t += '\n';
-			t += 'Height : ' + this.contextHeight;
+			t += 'Context Height : ' + this.contextHeight;
+			t += '\n';
+			t += 'Fullscreen Width : ' + this.fullScreenWidth;
+			t += '\n';
+			t += 'Fullscreen Height : ' + this.fullScreenHeight;
+			t += '\n';
+			t += 'Stage Width : ' + this.stageWidth;
+			t += '\n';
+			t += 'Stage Height : ' + this.stageHeight;
+			t += '\n';
+			t += 'Scene Width : ' + this.sceneWidth;
+			t += '\n';
+			t += 'Scene Height : ' + this.sceneHeight;
+			t += '\n';
+			t += 'ScaleToStage : ' + this.scaleToStage;
+			t += '\n';
+			t += 'ScaleFactor : ' + this.scaleFactor;
+			t += '\n';
+			t += 'DPI : ' + this.screenDPI;
+			t += '\n';
+			t += 'Tablet : ' + _isTablet;
 			t += '\n';
 			t += 'Mode : ' + this.mode;
+			t += '\n';
+			t += '[[ END DEBUG GAME CONTEXT ]]';
 			
 			return t;
 		}
 		
 		/**
-		 * Get Debug version of Player.
-		 * 
-		 * @return
-		 */
-		public function infos():String {
-			var t:String = '';
-			
-			t += '[[ DEBUG PLAYER ]]';
-			t += '\n';
-			t += 'Runtime : ' + this.runtime;
-			t += '\n';
-			t += 'Version : ' + this.flashVersion;
-			t += '\n';
-			t += 'Framerate : ' + this.framerate;
-			t += '\n';
-			t += 'Operating system : ' + this.operatingSystem;
-			t += '\n';
-			t += 'Bits processes supported : ' + this.bitsProcessesSupported;
-			t += '\n';
-			t += 'CPU : ' + this.cpuArchitecture;
-			t += '\n';
-			
-			return t;
-		}
-		
-		/**
-		 * Called by InteractiveContext during resizing. Don't call it !
-		 */
-		internal final function resize():void {
-			resizeEngineManager();
-		}
-		
-		/**
-		 * Start Game after called setup and set all core classes. Override it !
+		 * Start Game after called setup and set all core classes. Can be overrided, call it at end !
 		 */
 		public function start():void {
-			startEngineManager();
+			_engineManager.start();
 		}
 		
 		/**
-		 * Reset the context. Must be overrided.
+		 * Reset the context. Can be overrided.
 		 */
 		public function reset():void {
-			resetEngineManager();
+			_engineManager.reset();
 		}
 		
 		/**
@@ -214,17 +138,20 @@ package artcustomer.maxima.context {
 			if (_isContextSetup) throw new GameError(GameError.E_CONTEXT_SETUP_TRUE);
 			if (!this.contextView) throw new GameError(GameError.E_CONTEXT_SETUP);
 			
-			setupStage();
-			setupMultiThreadProxy();
-			setupEngineManager();
-			
-			super.setup();
+			this.instance = this;
 			
 			__currentContext = this;
 			
-			this.instance = this;
+			_multiThreadProxy = MultiThreadProxy.getInstance();
+			
+			_engineManager = EngineManager.getInstance();
+			_engineManager.context = this;
+			_engineManager.setup();
+			
+			super.setup();
+			
+			if (!_delayedGameEngineCreation) this.createGameEngine();
 			this.dispatchEvent(new GameEvent(GameEvent.GAME_SETUP, true, false, this, this.contextWidth, this.contextHeight, this.contextView.stage.stageWidth, this.contextView.stage.stageHeight));
-			this.showMenu();
 			
 			_isContextSetup = true;
 		}
@@ -236,8 +163,11 @@ package artcustomer.maxima.context {
 			if (!_isContextSetup) throw new GameError(GameError.E_CONTEXT_SETUP_FALSE);
 			if (!this.contextView) throw new GameError(GameError.E_CONTEXT_DESTROY);
 			
-			destroyEngineManager();
-			destroyMultiThreadProxy();
+			_engineManager.destroy();
+			_engineManager = null;
+			
+			_multiThreadProxy.destroy();
+			_multiThreadProxy = null;
 			
 			this.dispatchEvent(new GameEvent(GameEvent.GAME_DESTROY, true, false, this, this.contextWidth, this.contextHeight, this.contextView.stage.stageWidth, this.contextView.stage.stageHeight));
 			
@@ -279,6 +209,13 @@ package artcustomer.maxima.context {
 			if (error) throw new error(message, id);
 		}
 		
+		/**
+		 * Create game engine, depends of the platform. Override it !
+		 */
+		protected function createGameEngine():void {
+			
+		}
+		
 		
 		/**
 		 * @private
@@ -318,8 +255,8 @@ package artcustomer.maxima.context {
 		/**
 		 * @private
 		 */
-		public function get gameEngine():GameEngine {
-			return _engineManager.gameEngine;
+		public function get logicEngine():LogicEngine {
+			return _engineManager.logicEngine;
 		}
 		
 		/**
@@ -341,6 +278,19 @@ package artcustomer.maxima.context {
 		 */
 		public function get sfxEngine():SFXEngine {
 			return _engineManager.sfxEngine;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get gameEngine():GameEngine {
+			return _engineManager.gameEngine;
+		}
+		/**
+		 * @private
+		 */
+		internal function get engineManager():EngineManager {
+			return _engineManager;
 		}
 		
 		

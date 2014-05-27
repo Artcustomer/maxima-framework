@@ -27,7 +27,7 @@ package artcustomer.maxima.engine.inputs.controls.map {
 		 * Constructor
 		 */
 		public function GameControlsMap() {
-			setupMap();
+			_map = new Dictionary();
 			
 			_numControls = 0;
 		}
@@ -39,35 +39,15 @@ package artcustomer.maxima.engine.inputs.controls.map {
 		/**
 		 * @private
 		 */
-		private function setupMap():void {
-			_map = new Dictionary();
-		}
-		
-		/**
-		 * @private
-		 */
 		private function disposeMap():void {
 			var id:String;
-			var table:ControlTable;
 			
 			for (id in _map) {
-				table = _map[id] as ControlTable;
-				
-				if (table) {
-					table.destroy();
-					table = null;
-				}
+				if ((_map[id] as ControlTable) != null) (_map[id] as ControlTable).destroy();
 				
 				_map[id] = undefined;
 				delete _map[id];
 			}
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyMap():void {
-			_map = null;
 		}
 		
 		
@@ -76,13 +56,20 @@ package artcustomer.maxima.engine.inputs.controls.map {
 		 */
 		public function destroy():void {
 			disposeMap();
-			destroyMap();
 			
+			_map = null;
 			_numControls = 0;
 		}
 		
 		/**
-		 * Add controlin map.
+		 * Remove all controls.
+		 */
+		public function clear():void {
+			disposeMap();
+		}
+		
+		/**
+		 * Add control in map.
 		 * 
 		 * @param	action
 		 * @param	table

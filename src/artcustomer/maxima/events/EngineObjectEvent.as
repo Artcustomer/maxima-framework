@@ -19,6 +19,7 @@ package artcustomer.maxima.events {
 	public class EngineObjectEvent extends Event {
 		public static const ON_ENTRY:String = 'onEntry';
 		public static const ON_EXIT:String = 'onExit';
+		public static const ON_RESTART:String = 'onRestart';
 		
 		private var _object:AbstractEngineObject;
 		

@@ -28,10 +28,11 @@ package artcustomer.maxima.engine {
 		private var _shore:Shore;
 		private var _assetsLoader:AssetsLoader;
 		private var _renderEngine:RenderEngine;
-		private var _gameEngine:GameEngine;
+		private var _logicEngine:LogicEngine;
 		private var _scoreEngine:ScoreEngine;
 		private var _sfxEngine:SFXEngine;
 		private var _directInputEngine:DirectInputEngine;
+		private var _gameEngine:GameEngine;
 		
 		private var _allowSetContext:Boolean;
 		
@@ -49,215 +50,50 @@ package artcustomer.maxima.engine {
 			_allowSetContext = true;
 		}
 		
-		//---------------------------------------------------------------------
-		//  EngineObjectInjector
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupEngineObjectInjector():void {
-			_engineObjectInjector = EngineObjectInjector.getInstance();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyEngineObjectInjector():void {
-			_engineObjectInjector.destroy();
-			_engineObjectInjector = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  Shore
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupShore():void {
-			_shore = Shore.getInstance();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyShore():void {
-			_shore.destroy();
-			_shore = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  AssetsLoader
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupAssetsLoader():void {
-			_assetsLoader = AssetsLoader.getInstance();
-			_assetsLoader.context = _context;
-			_assetsLoader.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyAssetsLoader():void {
-			_assetsLoader.destroy();
-			_assetsLoader = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  RenderEngine
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupRenderEngine():void {
-			_renderEngine = RenderEngine.getInstance();
-			_renderEngine.context = _context;
-			_renderEngine.injector = _engineObjectInjector;
-			_renderEngine.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyRenderEngine():void {
-			_renderEngine.destroy();
-			_renderEngine = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  GameEngine
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupGameEngine():void {
-			_gameEngine = GameEngine.getInstance();
-			_gameEngine.context = _context;
-			_gameEngine.injector = _engineObjectInjector;
-			_gameEngine.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyGameEngine():void {
-			_gameEngine.destroy();
-			_gameEngine = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function startGameEngine():void {
-			_gameEngine.start();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function resetGameEngine():void {
-			_gameEngine.reset();
-		}
-		
-		//---------------------------------------------------------------------
-		//  ScoreEngine
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupScoreEngine():void {
-			_scoreEngine = ScoreEngine.getInstance();
-			_scoreEngine.context = _context;
-			_scoreEngine.injector = _engineObjectInjector;
-			_scoreEngine.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyScoreEngine():void {
-			_scoreEngine.destroy();
-			_scoreEngine = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  SFXEngine
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupSFXEngine():void {
-			_sfxEngine = SFXEngine.getInstance();
-			_sfxEngine.context = _context;
-			_sfxEngine.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroySFXEngine():void {
-			_sfxEngine.destroy();
-			_sfxEngine = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  DirectInputEngine
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupDirectInputEngine():void {
-			_directInputEngine = DirectInputEngine.getInstance();
-			_directInputEngine.context = _context;
-			_directInputEngine.injector = _engineObjectInjector;
-			_directInputEngine.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyDirectInputEngine():void {
-			_directInputEngine.destroy();
-			_directInputEngine = null;
-		}
-		
 		
 		/**
 		 * Entry point.
 		 */
 		public function setup():void {
-			setupEngineObjectInjector();
-			setupShore();
-			setupAssetsLoader();
-			setupRenderEngine();
-			setupScoreEngine();
-			setupSFXEngine();
-			setupDirectInputEngine();
-			setupGameEngine();
+			_engineObjectInjector = EngineObjectInjector.getInstance();
+			
+			_shore = Shore.getInstance();
+			
+			_assetsLoader = createEngine(AssetsLoader, false) as AssetsLoader;
+			_renderEngine = createEngine(RenderEngine, false) as RenderEngine;
+			_scoreEngine = createEngine(ScoreEngine) as ScoreEngine;
+			_sfxEngine = createEngine(SFXEngine, false) as SFXEngine;
+			_logicEngine = createEngine(LogicEngine) as LogicEngine;
+			_directInputEngine = createEngine(DirectInputEngine) as DirectInputEngine;
 		}
 		
 		/**
 		 * Destructor.
 		 */
 		public function destroy():void {
-			destroyDirectInputEngine();
-			destroyGameEngine();
-			destroySFXEngine();
-			destroyScoreEngine();
-			destroyRenderEngine();
-			destroyAssetsLoader();
-			destroyShore();
-			destroyEngineObjectInjector();
+			_gameEngine.destroy();
+			_gameEngine = null;
+			
+			_directInputEngine.destroy();
+			_directInputEngine = null;
+			
+			_sfxEngine.destroy();
+			_sfxEngine = null;
+			
+			_scoreEngine.destroy();
+			_scoreEngine = null;
+			
+			_renderEngine.destroy();
+			_renderEngine = null;
+			
+			_assetsLoader.destroy();
+			_assetsLoader = null;
+			
+			_shore.destroy();
+			_shore = null;
+			
+			_engineObjectInjector.destroy();
+			_engineObjectInjector = null;
 			
 			__instance = null;
 			__allowInstantiation = false;
@@ -268,21 +104,53 @@ package artcustomer.maxima.engine {
 		 * Start engine.
 		 */
 		public function start():void {
-			startGameEngine();
+			_gameEngine.start();
 		}
 		
 		/**
 		 * Reset engine.
 		 */
 		public function reset():void {
-			resetGameEngine();
+			_gameEngine.reset();
 		}
 		
 		/**
 		 * Resize engine.
 		 */
 		public function resize():void {
-			if (_gameEngine.currentEngineObject) _engineObjectInjector.resizeObject(_gameEngine.currentEngineObject);
+			if (_gameEngine && _gameEngine.currentEngineObject) _engineObjectInjector.resizeObject(_gameEngine.currentEngineObject);
+		}
+		
+		/**
+		 * Create Flash game engine.
+		 */
+		public function createGameEngine(engineClass:Class):void {
+			_gameEngine = this.createEngine(engineClass) as GameEngine;
+		}
+		
+		/**
+		 * Create engine.
+		 * 
+		 * @param	engineClass
+		 * @param	needInjector
+		 * @return
+		 */
+		public function createEngine(engineClass:Class, needInjector:Boolean = true):AbstractCoreEngine {
+			var engine:AbstractCoreEngine = new engineClass();
+			engine.context = _context;
+			if (needInjector) engine.injector = _engineObjectInjector;
+			engine.setup();
+			
+			return engine;
+		}
+		
+		/**
+		 * Remove engine.
+		 * 
+		 * @param	engine
+		 */
+		public function removeEngine(engine:AbstractCoreEngine):void {
+			if (engine) engine.destroy();
 		}
 		
 		
@@ -335,8 +203,8 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		public function get gameEngine():GameEngine {
-			return _gameEngine;
+		public function get logicEngine():LogicEngine {
+			return _logicEngine;
 		}
 		
 		/**
@@ -358,6 +226,13 @@ package artcustomer.maxima.engine {
 		 */
 		public function get directInputEngine():DirectInputEngine {
 			return _directInputEngine;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get gameEngine():GameEngine {
+			return _gameEngine;
 		}
 	}
 }

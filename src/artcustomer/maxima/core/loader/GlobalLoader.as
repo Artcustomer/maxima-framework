@@ -47,49 +47,25 @@ package artcustomer.maxima.core.loader {
 		/**
 		 * @private
 		 */
-		private function setupAssetsLoader():void {
-			_assetsLoader = this.context.instance.assetsLoader;
-			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_START, handleAssetsLoader, false, 0, true);
-			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_CLOSE, handleAssetsLoader, false, 0, true);
-			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_PROGRESS, handleAssetsLoader, false, 0, true);
-			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_ERROR, handleAssetsLoader, false, 0, true);
-			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_COMPLETE, handleAssetsLoader, false, 0, true);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyAssetsLoader():void {
-			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_START, handleAssetsLoader);
-			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_CLOSE, handleAssetsLoader);
-			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_PROGRESS, handleAssetsLoader);
-			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_ERROR, handleAssetsLoader);
-			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_COMPLETE, handleAssetsLoader);
-			_assetsLoader = null;
-		}
-		
-		/**
-		 * @private
-		 */
 		private function handleAssetsLoader(e:AssetsLoaderEvent):void {
 			switch (e.type) {
-				case('loadingStart'):
+				case(AssetsLoaderEvent.LOADING_START):
 					onStartLoading(e);
 					break;
 					
-				case('loadingClose'):
+				case(AssetsLoaderEvent.LOADING_CLOSE):
 					onCloseLoading(e);
 					break;
 					
-				case('loadingProgress'):
+				case(AssetsLoaderEvent.LOADING_PROGRESS):
 					onProgressLoading(e);
 					break;
 					
-				case('loadingError'):
+				case(AssetsLoaderEvent.LOADING_ERROR):
 					onErrorLoading(e);
 					break;
 					
-				case('loadingComplete'):
+				case(AssetsLoaderEvent.LOADING_COMPLETE):
 					onCompleteLoading(e);
 					break;
 					
@@ -150,7 +126,12 @@ package artcustomer.maxima.core.loader {
 		 * Entry point. Override it and call at begin !
 		 */
 		override protected function onEntry():void {
-			setupAssetsLoader();
+			_assetsLoader = this.context.instance.assetsLoader;
+			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_START, handleAssetsLoader, false, 0, true);
+			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_CLOSE, handleAssetsLoader, false, 0, true);
+			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_PROGRESS, handleAssetsLoader, false, 0, true);
+			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_ERROR, handleAssetsLoader, false, 0, true);
+			_assetsLoader.addEventListener(AssetsLoaderEvent.LOADING_COMPLETE, handleAssetsLoader, false, 0, true);
 			
 			super.onEntry();
 		}
@@ -166,7 +147,12 @@ package artcustomer.maxima.core.loader {
 		 * Destructor. Override it and call at end !
 		 */
 		override protected function destroy():void {
-			destroyAssetsLoader();
+			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_START, handleAssetsLoader);
+			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_CLOSE, handleAssetsLoader);
+			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_PROGRESS, handleAssetsLoader);
+			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_ERROR, handleAssetsLoader);
+			_assetsLoader.removeEventListener(AssetsLoaderEvent.LOADING_COMPLETE, handleAssetsLoader);
+			_assetsLoader = null;
 			
 			super.destroy();
 		}

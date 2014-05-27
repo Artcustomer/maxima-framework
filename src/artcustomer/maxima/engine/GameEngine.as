@@ -21,15 +21,11 @@ package artcustomer.maxima.engine {
 	 * 
 	 * @author David Massenot
 	 */
-	public class GameEngine extends AbstractDisplayCoreEngine {
-		private static var __instance:GameEngine;
-		private static var __allowInstantiation:Boolean;
+	public class GameEngine extends AbstractCoreEngine {
+		protected var _navigationSystem:NavigationSystem;
+		protected var _currentEngineObject:AbstractEngineObject;
 		
-		private var _navigationSystem:NavigationSystem;
-		
-		private var _currentEngineObject:AbstractEngineObject;
-		
-		private var _onReset:Boolean;
+		protected var _onReset:Boolean;
 		
 		
 		/**
@@ -37,11 +33,23 @@ package artcustomer.maxima.engine {
 		 */
 		public function GameEngine() {
 			super();
-			
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_GAMEENGINE_CREATE);
-				
-				return;
+		}
+		
+		//---------------------------------------------------------------------
+		//  Listeners
+		//---------------------------------------------------------------------
+		
+		/**
+		 * @private
+		 */
+		private function handleDeviceInputs(e:DeviceInputsEvent):void {
+			switch (e.type) {
+				case(DeviceInputsEvent.DEVICE_BACK):
+					if (_currentEngineObject) _injector.onBack(_currentEngineObject);
+					break;
+					
+				default:
+					break;
 			}
 		}
 		
@@ -52,66 +60,21 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		private function setupNavigationSystem():void {
-			_navigationSystem = NavigationSystem.getInstance();
-			_navigationSystem.context = this.context;
-			
-			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_REQUESTED, handleNavigationSystem, false, 0, true);
-			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_CHANGE, handleNavigationSystem, false, 0, true);
-			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, handleNavigationSystem, false, 0, true);
-			_navigationSystem.addEventListener(NavigationSystemEvent.ON_SYSTEM_ERROR, handleNavigationSystem, false, 0, true);
-			_navigationSystem.setup();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyNavigationSystem():void {
-			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_REQUESTED, handleNavigationSystem);
-			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_CHANGE, handleNavigationSystem);
-			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, handleNavigationSystem);
-			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_SYSTEM_ERROR, handleNavigationSystem);
-			_navigationSystem.destroy();
-			_navigationSystem = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateMapInNavigationSystem(key:String, engineClass:Class):void {
-			_navigationSystem.addInMap(key, engineClass);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function updateLocationInNavigationSystem():void {
-			_navigationSystem.updateLocationAfterRequest(_currentEngineObject.isAvailableForHistory);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function runTimeLineInNavigationSystem():void {
-			_navigationSystem.runTimeLine();
-		}
-		
-		/**
-		 * @private
-		 */
 		private function handleNavigationSystem(e:NavigationSystemEvent):void {
 			switch (e.type) {
-				case('onLocationRequested'):
+				case(NavigationSystemEvent.ON_LOCATION_REQUESTED):
 					checkCurrentEngineObject();
 					break;
 					
-				case('onLocationChange'):
+				case(NavigationSystemEvent.ON_LOCATION_CHANGE):
 					break;
 					
-				case('onLocationNotFound'):
+				case(NavigationSystemEvent.ON_LOCATION_NOT_FOUND):
+					throw new GameError(e.error);
 					break;
 					
-				case('onSystemError'):
+				case(NavigationSystemEvent.ON_SYSTEM_ERROR):
+					throw new GameError(GameError.E_NAVIGATION_ERROR + ' ' + e.error);
 					break;
 					
 				default:
@@ -132,6 +95,7 @@ package artcustomer.maxima.engine {
 			if (_currentEngineObject) {
 				_currentEngineObject.addEventListener(EngineObjectEvent.ON_ENTRY, handleCurrentEngineObject, false, 0, true);
 				_currentEngineObject.addEventListener(EngineObjectEvent.ON_EXIT, handleCurrentEngineObject, false, 0, true);
+				_currentEngineObject.addEventListener(EngineObjectEvent.ON_RESTART, handleCurrentEngineObject, false, 0, true);
 				_injector.entryObject(_currentEngineObject);
 			} else {
 				throw new GameError(GameError.E_NULL_CURRENTOBJECT);
@@ -166,7 +130,7 @@ package artcustomer.maxima.engine {
 				if (_currentEngineObject) {
 					_currentEngineObject.context = this.context;
 					
-					if (_currentEngineObject is AbstractEngineDisplayObject) (_currentEngineObject as AbstractEngineDisplayObject).parent = this.engineDisplayContainer;
+					this.addCurrentObjectToStage();
 				}
 			}
 		}
@@ -179,6 +143,7 @@ package artcustomer.maxima.engine {
 				_injector.destroyObject(_currentEngineObject);
 				_currentEngineObject.removeEventListener(EngineObjectEvent.ON_ENTRY, handleCurrentEngineObject);
 				_currentEngineObject.removeEventListener(EngineObjectEvent.ON_EXIT, handleCurrentEngineObject);
+				_currentEngineObject.removeEventListener(EngineObjectEvent.ON_RESTART, handleCurrentEngineObject);
 				_currentEngineObject = null;
 			}
 		}
@@ -188,11 +153,11 @@ package artcustomer.maxima.engine {
 		 */
 		private function handleCurrentEngineObject(e:EngineObjectEvent):void {
 			switch (e.type) {
-				case('onEntry'):
-					updateLocationInNavigationSystem();
+				case(EngineObjectEvent.ON_ENTRY):
+					_navigationSystem.updateLocationAfterRequest(_currentEngineObject.isAvailableForHistory);
 					break;
 					
-				case('onExit'):
+				case(EngineObjectEvent.ON_EXIT):
 					destroyCurrentEngineObject();
 					
 					if (_onReset) {
@@ -202,11 +167,21 @@ package artcustomer.maxima.engine {
 					}
 					break;
 					
+				case(EngineObjectEvent.ON_RESTART):
+					_navigationSystem.restartCurrent();
+					break;
+					
 				default:
 					break;
 			}
 		}
 		
+		/**
+		 * Add display object to stage. Override it !
+		 */
+		protected function addCurrentObjectToStage():void {
+			
+		}
 		
 		/**
 		 * Entry point.
@@ -214,7 +189,15 @@ package artcustomer.maxima.engine {
 		override internal function setup():void {
 			super.setup();
 			
-			setupNavigationSystem();
+			_navigationSystem = NavigationSystem.getInstance();
+			_navigationSystem.context = this.context;
+			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_REQUESTED, handleNavigationSystem, false, 0, true);
+			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_CHANGE, handleNavigationSystem, false, 0, true);
+			_navigationSystem.addEventListener(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, handleNavigationSystem, false, 0, true);
+			_navigationSystem.addEventListener(NavigationSystemEvent.ON_SYSTEM_ERROR, handleNavigationSystem, false, 0, true);
+			_navigationSystem.setup();
+			
+			this.context.addEventListener(DeviceInputsEvent.DEVICE_BACK, handleDeviceInputs, false, 0, true);
 			
 			_onReset = false;
 		}
@@ -223,7 +206,14 @@ package artcustomer.maxima.engine {
 		 * Destructor
 		 */
 		override internal function destroy():void {
-			destroyNavigationSystem();
+			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_REQUESTED, handleNavigationSystem);
+			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_CHANGE, handleNavigationSystem);
+			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, handleNavigationSystem);
+			_navigationSystem.removeEventListener(NavigationSystemEvent.ON_SYSTEM_ERROR, handleNavigationSystem);
+			_navigationSystem.destroy();
+			_navigationSystem = null;
+			
+			this.context.removeEventListener(DeviceInputsEvent.DEVICE_BACK, handleDeviceInputs);
 			
 			_currentEngineObject = null;
 			_onReset = false;
@@ -236,8 +226,7 @@ package artcustomer.maxima.engine {
 		 */
 		internal function start():void {
 			_onReset = false;
-			
-			runTimeLineInNavigationSystem();
+			_navigationSystem.runTimeLine();
 		}
 		
 		/**
@@ -247,85 +236,6 @@ package artcustomer.maxima.engine {
 			_onReset = true;
 			
 			exitCurrentEngineObject();
-		}
-		
-		/**
-		 * Set global loader for the game.
-		 * Would be called at first !
-		 * 
-		 * @param	engineClass : Class extends GlobalLoader
-		 * @param	name : Name of the object (the key)
-		 */
-		public function setGlobalLoader(engineClass:Class, name:String):void {
-			if (!engineClass || !engineClass is GlobalLoader) {
-				throw new GameError(GameError.E_CORE_GLOBALLOADER);
-				
-				return;
-			}
-			
-			updateMapInNavigationSystem(name, engineClass);
-		}
-		
-		/**
-		 * Set single view in the engine.
-		 * 
-		 * @param	engineClass : Class extends DisplayView
-		 * @param	name : Name of the object (the key)
-		 */
-		public function setView(engineClass:Class, name:String):void {
-			if (!engineClass || !engineClass is DisplayView) {
-				throw new GameError(GameError.E_CORE_DISPLAYVIEW);
-				
-				return;
-			}
-			
-			updateMapInNavigationSystem(name, engineClass);
-		}
-		
-		/**
-		 * Set view group in the engine. A view group can contain multiple views.
-		 * 
-		 * @param	engineClass : Class extends DisplayViewGroup
-		 * @param	name : Name of the object (the key)
-		 */
-		public function setViewGroup(engineClass:Class, name:String):void {
-			if (!engineClass || !engineClass is DisplayViewGroup) {
-				throw new GameError(GameError.E_CORE_DISPLAYVIEWGROUP);
-				
-				return;
-			}
-			
-			updateMapInNavigationSystem(name, engineClass);
-		}
-		
-		/**
-		 * Set the game in the engine.
-		 * 
-		 * @param	engineClass : Class extends DisplayGame
-		 * @param	name : Name of the object (the key)
-		 */
-		public function setGame(engineClass:Class, name:String):void {
-			if (!engineClass || !engineClass is DisplayGame) {
-				throw new GameError(GameError.E_CORE_DISPLAYGAME);
-				
-				return;
-			}
-			
-			updateMapInNavigationSystem(name, engineClass);
-		}
-		
-		
-		/**
-		 * Instantiate GameEngine.
-		 */
-		public static function getInstance():GameEngine {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new GameEngine();
-				__allowInstantiation = false;
-			}
-			
-			return __instance;
 		}
 		
 		

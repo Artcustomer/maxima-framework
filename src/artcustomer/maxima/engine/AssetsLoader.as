@@ -30,12 +30,10 @@ package artcustomer.maxima.engine {
 	 * @author David Massenot
 	 */
 	public class AssetsLoader extends AbstractCoreEngine {
-		private static var __instance:AssetsLoader;
-		private static var __allowInstantiation:Boolean;
-		
 		private var _assetsFactory:AssetsFactory;
 		private var _assetsCache:AssetsCache;
 		
+		private var _id:String;
 		private var _description:String;
 		
 		private var _queue:Vector.<AbstractLoadableAsset>;
@@ -57,33 +55,23 @@ package artcustomer.maxima.engine {
 		 * Constructor
 		 */
 		public function AssetsLoader() {
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_ASSETSLOADER_CREATE);
-				
-				return;
-			}
+			super();
 			
-			init();
-		}
-		
-		//---------------------------------------------------------------------
-		//  Loading
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function init():void {
 			_loadedAssets = 0;
 			_totalAssets = 0;
 			_bytesLoaded = 0;
 			_bytesTotal = 0;
 			_progress = 0;
+			_id = '';
 			_description = '';
 			_onLoad = false;
 			_isLoaded = false;
 			_isUnLoaded = false;
 		}
+		
+		//---------------------------------------------------------------------
+		//  Loading
+		//---------------------------------------------------------------------
 		
 		/**
 		 * @private
@@ -113,7 +101,7 @@ package artcustomer.maxima.engine {
 				if (loadableAsset.status == AssetLoadingStatus.WAITING) loadableAsset.load();
 			}
 			
-			this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_START, true, false, _description, _bytesLoaded, _bytesTotal, _progress, null));
+			this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_START, true, false, _id, _description, _bytesLoaded, _bytesTotal, _progress, null));
 			
 			_onLoad = true;
 		}
@@ -131,7 +119,7 @@ package artcustomer.maxima.engine {
 				loadableAsset.close();
 			}
 			
-			this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_CLOSE, true, false, _description, _bytesLoaded, _bytesTotal, _progress, null));
+			this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_CLOSE, true, false, _id, _description, _bytesLoaded, _bytesTotal, _progress, null));
 			
 			_onLoad = false;
 		}
@@ -148,7 +136,7 @@ package artcustomer.maxima.engine {
 				_isLoaded = true;
 				_progress = 1;
 				
-				this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_COMPLETE, true, false, _description, _bytesLoaded, _bytesTotal, _progress, null));
+				this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_COMPLETE, true, false, _id, _description, _bytesLoaded, _bytesTotal, _progress, null));
 			}
 		}
 		
@@ -180,7 +168,7 @@ package artcustomer.maxima.engine {
 			if (progress != 0) {
 				_progress = progress;
 				
-				this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_PROGRESS, false, false, _description, _bytesLoaded, _bytesTotal, _progress, null));
+				this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_PROGRESS, false, false, _id, _description, _bytesLoaded, _bytesTotal, _progress, null));
 			}
 		}
 		
@@ -189,11 +177,11 @@ package artcustomer.maxima.engine {
 		 */
 		private function handleLoadableAsset(e:LoadableAssetEvent):void {
 			switch (e.type) {
-				case('assetLoadingError'):
-					this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_ERROR, true, false, _description, _bytesLoaded, _bytesTotal, _progress, e.error));
+				case(LoadableAssetEvent.ASSET_LOADING_ERROR):
+					this.dispatchEvent(new AssetsLoaderEvent(AssetsLoaderEvent.LOADING_ERROR, true, false, _id, _description, _bytesLoaded, _bytesTotal, _progress, e.error));
 					break;
 					
-				case('assetLoadingComplete'):
+				case(LoadableAssetEvent.ASSET_LOADING_COMPLETE):
 					addAssetInAssetsCache(e.asset);
 					checkComplete();
 					break;
@@ -213,42 +201,8 @@ package artcustomer.maxima.engine {
 		}
 		
 		//---------------------------------------------------------------------
-		//  AssetsFactory
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupAssetsFactory():void {
-			_assetsFactory = new AssetsFactory();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyAssetsFactory():void {
-			_assetsFactory.destroy();
-			_assetsFactory = null;
-		}
-		
-		//---------------------------------------------------------------------
 		//  AssetsCache
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupAssetsCache():void {
-			_assetsCache = new AssetsCache();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyAssetsCache():void {
-			_assetsCache.destroy();
-			_assetsCache = null;
-		}
 		
 		/**
 		 * @private
@@ -298,20 +252,26 @@ package artcustomer.maxima.engine {
 		override internal function setup():void {
 			super.setup();
 			
-			setupAssetsCache();
-			setupAssetsFactory();
+			_assetsCache = new AssetsCache();
+			_assetsFactory = new AssetsFactory();
 		}
 		
 		/**
 		 * Destructor
 		 */
 		override internal function destroy():void {
-			destroyAssetsCache();
-			destroyAssetsFactory();
+			_assetsCache.destroy();
+			_assetsCache = null;
+			
+			_assetsFactory.destroy();
+			_assetsFactory = null;
+			
 			disposeQueue();
 			releaseQueue();
+			
 			_loadedAssets = 0;
 			_totalAssets = 0;
+			_id = null;
 			_description = null;
 			_bytesLoaded = 0;
 			_bytesTotal = 0;
@@ -330,8 +290,10 @@ package artcustomer.maxima.engine {
 		 * @param	source : File
 		 * @param	name : Name (id)
 		 * @param	group : Useful to group some assets
+		 * @param	scale
+		 * @param	lang
 		 */
-		public function queueAsset(source:String, name:String, group:String = 'assets'):void {
+		public function queueAsset(source:String, name:String, group:String = 'assets', scale:Number = 0, lang:String = null):void {
 			if (_onLoad) throw new GameError(GameError.E_ASSETSLOADER_ONLOAD);
 			
 			var loadableAsset:AbstractLoadableAsset;
@@ -345,6 +307,8 @@ package artcustomer.maxima.engine {
 					loadableAsset.source = source;
 					loadableAsset.name = name;
 					loadableAsset.group = group;
+					loadableAsset.scale = scale;
+					loadableAsset.lang = lang;
 					
 					_queue.push(loadableAsset);
 				} else {
@@ -356,12 +320,14 @@ package artcustomer.maxima.engine {
 		/**
 		 * Load queue.
 		 * 
+		 * @param	id
 		 * @param	description
 		 */
-		public function loadQueue(description:String = 'loading'):void {
+		public function loadQueue(id:String, description:String = 'loading'):void {
 			if (!_queue || _queue.length == 0) throw new GameError(GameError.E_ASSETSLOADER_EMPTY);
 			if (_onLoad) throw new GameError(GameError.E_ASSETSLOADER_ONLOAD);
 			
+			_id = id;
 			_description = description;
 			_isUnLoaded = false;
 			
@@ -430,20 +396,6 @@ package artcustomer.maxima.engine {
 		 */
 		public function getGroup(group:String):Vector.<IAsset> {
 			return _assetsCache.getGroup(group);
-		}
-		
-		
-		/**
-		 * Instantiate AssetsLoader.
-		 */
-		public static function getInstance():AssetsLoader {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new AssetsLoader();
-				__allowInstantiation = false;
-			}
-			
-			return __instance;
 		}
 		
 		

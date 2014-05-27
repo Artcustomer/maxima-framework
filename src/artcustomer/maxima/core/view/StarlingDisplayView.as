@@ -9,16 +9,16 @@ package artcustomer.maxima.core.view {
 	import flash.utils.getQualifiedClassName;
 	
 	import artcustomer.maxima.errors.*;
-	import artcustomer.maxima.core.AbstractEngineDisplayObject;
+	import artcustomer.maxima.core.AbstractEngineStarlingDisplayObject;
 	
 	
 	/**
-	 * DisplayViewGroup : TODO...
+	 * StarlingDisplayView
 	 * 
 	 * @author David Massenot
 	 */
-	public class DisplayViewGroup extends AbstractEngineDisplayObject {
-		private static const FULL_CLASS_NAME:String = 'artcustomer.maxima.core.view::DisplayViewGroup';
+	public class StarlingDisplayView extends AbstractEngineStarlingDisplayObject {
+		private static const FULL_CLASS_NAME:String = 'artcustomer.maxima.core.view::StarlingDisplayView';
 		
 		
 		/**
@@ -26,35 +26,13 @@ package artcustomer.maxima.core.view {
 		 * 
 		 * @param	aName : Name of the object, used as key in NavigationSystem. Required !
 		 */
-		public function DisplayViewGroup(aName:String) {
+		public function StarlingDisplayView(aName:String) {
 			super();
 			
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_ABSTRACT_CLASS);
 			if (!aName) throw new GameError(GameError.E_NULL_CORE_NAME);
 			
 			this.name = aName;
-		}
-		
-		
-		/**
-		 * Entry point. Override it !
-		 */
-		override protected function onEntry():void {
-			super.onEntry();
-		}
-		
-		/**
-		 * Exit point. Override it !
-		 */
-		override protected function onExit():void {
-			super.onExit();
-		}
-		
-		/**
-		 * Destructor. Override it and call at end !
-		 */
-		override protected function destroy():void {
-			super.destroy();
 		}
 	}
 }

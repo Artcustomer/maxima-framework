@@ -88,7 +88,7 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		public function set injector(value:EngineObjectInjector):void {
+		internal function set injector(value:EngineObjectInjector):void {
 			if (_allowSetInjector) {
 				_injector = value;
 				

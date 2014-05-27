@@ -5,10 +5,10 @@
  * in accordance with the terms of the license agreement accompanying it.
  */
 
-package artcustomer.maxima.proxies {
-	import flash.system.WorkerDomain;
-	import flash.system.Worker;
-	import flash.system.MessageChannel;
+package artcustomer.maxima.proxies.threads {
+	//import flash.system.WorkerDomain;
+	//import flash.system.Worker;
+	//import flash.system.MessageChannel;
 	
 	import artcustomer.maxima.base.*;
 	import artcustomer.maxima.errors.*;
@@ -47,16 +47,16 @@ package artcustomer.maxima.proxies {
 		/**
 		 * Get current Worker.
 		 */
-		public function getCurrentThread():Worker {
+		/*public function getCurrentThread():Worker {
 			return Worker.current;
-		}
+		}*/
 		
 		/**
 		 * Get new Worker.
 		 */
-		public function getThread():Worker {
+		/*public function getThread():Worker {
 			return null;
-		}
+		}*/
 		
 		
 		/**
@@ -77,7 +77,8 @@ package artcustomer.maxima.proxies {
 		 * @private
 		 */
 		public function get isSupported():Boolean {
-			return Worker.isSupported;
+			//return Worker.isSupported;
+			return false;
 		}
 	}
 }

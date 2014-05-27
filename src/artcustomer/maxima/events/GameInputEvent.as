@@ -42,6 +42,11 @@ package artcustomer.maxima.events {
 		public static const INPUT_TOUCH_MOVE:String = 'inputTouchMove';
 		public static const INPUT_TOUCH_TAP:String = 'inputTouchTap';
 		
+		public static const INPUT_PAD_PRESS:String = 'inputPadPress';
+		public static const INPUT_PAD_RELEASE:String = 'inputPadRelease';
+		public static const INPUT_PAD_REPEAT:String = 'inputPadRepeat';
+		public static const INPUT_PAD_FAST_REPEAT:String = 'inputPadFastRepeat';
+		
 		private var _context:IGameContext;
 		private var _nativeEvent:Event;
 		

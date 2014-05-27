@@ -35,26 +35,12 @@ package artcustomer.maxima.engine {
 				return;
 			}
 			
-			setupDictionary();
+			_repository = new Dictionary();
 		}
 		
 		//---------------------------------------------------------------------
 		//  Dictionary
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupDictionary():void {
-			_repository = new Dictionary();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyDictionary():void {
-			_repository = null;
-		}
 		
 		/**
 		 * @private
@@ -135,8 +121,8 @@ package artcustomer.maxima.engine {
 		 */
 		internal function destroy():void {
 			disposeDictionary();
-			destroyDictionary();
 			
+			_repository = null;
 			_numKeys = 0;
 			
 			__instance = null;

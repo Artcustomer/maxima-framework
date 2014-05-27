@@ -31,19 +31,12 @@ package artcustomer.maxima.core.score.data {
 		 * Constructor
 		 */
 		public function ScoreDataBase() {
-			setupDataBase();
+			_dataBase = new Dictionary();
 		}
 		
 		//---------------------------------------------------------------------
 		//  DataBase
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupDataBase():void {
-			_dataBase = new Dictionary();
-		}
 		
 		/**
 		 * @private
@@ -65,21 +58,14 @@ package artcustomer.maxima.core.score.data {
 			}
 		}
 		
-		/**
-		 * @private
-		 */
-		private function destroyDataBase():void {
-			_dataBase = null;
-		}
-		
 		
 		/**
 		 * Destructor.
 		 */
 		public function destroy():void {
 			disposeDataBase();
-			destroyDataBase();
 			
+			_dataBase = null;
 			_lastEntry = null;
 			_numEntries = 0;
 		}

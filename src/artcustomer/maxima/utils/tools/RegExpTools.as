@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 David MASSENOT - http://artcustomer.fr/
+ * Copyright (c) 2012 David MASSENOT - http://artcustomer.fr/
  * 
  * Permission is hereby granted to use, modify, and distribute this file 
  * in accordance with the terms of the license agreement accompanying it.
@@ -14,7 +14,7 @@ package artcustomer.maxima.utils.tools {
 	 * @author David Massenot
 	 */
 	public class RegExpTools {
-		private static var __pattern:RegExp = /^[\w\-.-._]+@[\w\.-]+\.[a-z]{2,3}$/i;
+		private static var __patternMail:RegExp = /^[\w\-.-._]+@[\w\.-]+\.[a-z]{2,3}$/i;
 		
 		
 		/**
@@ -24,7 +24,7 @@ package artcustomer.maxima.utils.tools {
 		 * @return
 		 */
 		public static function testMail(value:String):Boolean {
-			return __pattern.test(value);
+			return __patternMail.test(value);
 		}
 		
 		/**

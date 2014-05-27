@@ -37,24 +37,6 @@ package artcustomer.maxima.core {
 		
 		
 		/**
-		 * Entry point. Override it !
-		 */
-		override protected function onEntry():void {
-			// 
-			
-			super.onEntry();
-		}
-		
-		/**
-		 * Exit point. Override it !
-		 */
-		override protected function onExit():void {
-			// 
-			
-			super.onExit();
-		}
-		
-		/**
 		 * Destructor. Must be overrided !
 		 */
 		override protected function destroy():void {
@@ -80,6 +62,13 @@ package artcustomer.maxima.core {
 		 */
 		protected final function unmapControl(action:String):void {
 			this.context.instance.directInputEngine.unmapControl(this.name, action);
+		}
+		
+		/**
+		 * Unmap all controls in DirectInputEngine.
+		 */
+		protected final function unmapAllControls():void {
+			this.context.instance.directInputEngine.unmapAllControls();
 		}
 		
 		/**

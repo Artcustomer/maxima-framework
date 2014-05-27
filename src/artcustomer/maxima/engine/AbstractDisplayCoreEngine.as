@@ -21,7 +21,6 @@ package artcustomer.maxima.engine {
 		private static const FULL_CLASS_NAME:String = 'artcustomer.maxima.engine::AbstractDisplayCoreEngine';
 		
 		private var _engineDisplayContainer:Sprite;
-		private var _headupDisplayContainer:Sprite;
 		
 		
 		/**
@@ -33,61 +32,13 @@ package artcustomer.maxima.engine {
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_ABSTRACT_CLASS);
 		}
 		
-		//---------------------------------------------------------------------
-		//  Engine Container
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupEngineContainer():void {
-			_engineDisplayContainer = new Sprite();
-			
-			this.context.contextView.addChild(_engineDisplayContainer);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyEngineContainer():void {
-			if (_engineDisplayContainer) {
-				if (_engineDisplayContainer.parent && _engineDisplayContainer.parent.contains(_engineDisplayContainer)) _engineDisplayContainer.parent.removeChild(_engineDisplayContainer);
-				
-				_engineDisplayContainer = null;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  HeadUp Container
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupHeadUpContainer():void {
-			_headupDisplayContainer = new Sprite();
-			
-			this.context.contextView.addChild(_headupDisplayContainer);
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyHeadUpContainer():void {
-			if (_headupDisplayContainer) {
-				if (_headupDisplayContainer.parent && _headupDisplayContainer.parent.contains(_headupDisplayContainer)) _headupDisplayContainer.parent.removeChild(_headupDisplayContainer);
-				
-				_headupDisplayContainer = null;
-			}
-		}
-		
 		
 		/**
 		 * Entry point.
 		 */
 		override internal function setup():void {
-			setupEngineContainer();
-			setupHeadUpContainer();
+			_engineDisplayContainer = new Sprite();
+			this.context.instance.viewPortContainer.addChild(_engineDisplayContainer);
 			
 			super.setup();
 		}
@@ -96,8 +47,10 @@ package artcustomer.maxima.engine {
 		 * Destructor.
 		 */
 		override internal function destroy():void {
-			destroyEngineContainer();
-			destroyHeadUpContainer();
+			if (_engineDisplayContainer) {
+				if (_engineDisplayContainer.parent && _engineDisplayContainer.parent.contains(_engineDisplayContainer)) _engineDisplayContainer.parent.removeChild(_engineDisplayContainer);
+				_engineDisplayContainer = null;
+			}
 			
 			super.destroy();
 		}
@@ -108,13 +61,6 @@ package artcustomer.maxima.engine {
 		 */
 		internal function get engineDisplayContainer():Sprite {
 			return _engineDisplayContainer;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function get headupDisplayContainer():Sprite {
-			return _headupDisplayContainer;
 		}
 	}
 }

@@ -20,9 +20,6 @@ package artcustomer.maxima.engine {
 	 * @author David Massenot
 	 */
 	public class ScoreEngine extends AbstractCoreEngine {
-		private static var __instance:ScoreEngine;
-		private static var __allowInstantiation:Boolean;
-		
 		private var _scoreDataBase:ScoreDataBase;
 		private var _scoreManager:ScoreManager;
 		
@@ -32,45 +29,6 @@ package artcustomer.maxima.engine {
 		 */
 		public function ScoreEngine() {
 			super();
-			
-			if (!__allowInstantiation) {
-				throw new GameError(GameError.E_SCOREENGINE_CREATE);
-				
-				return;
-			}
-		}
-		
-		//---------------------------------------------------------------------
-		//  ScoreDataBase
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupScoreDataBase():void {
-			_scoreDataBase = new ScoreDataBase();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyScoreDataBase():void {
-			_scoreDataBase.destroy();
-			_scoreDataBase = null;
-		}
-		
-		//---------------------------------------------------------------------
-		//  ScoreManager
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function destroyScoreManager():void {
-			if (_scoreManager) {
-				_injector.destroyObject(_scoreManager);
-				_scoreManager = null;
-			}
 		}
 		
 		
@@ -82,15 +40,20 @@ package artcustomer.maxima.engine {
 			
 			super.setup();
 			
-			setupScoreDataBase();
+			_scoreDataBase = new ScoreDataBase();
 		}
 		
 		/**
 		 * Destructor
 		 */
 		override internal function destroy():void {
-			destroyScoreManager();
-			destroyScoreDataBase();
+			if (_scoreManager) {
+				_injector.destroyObject(_scoreManager);
+				_scoreManager = null;
+			}
+			
+			_scoreDataBase.destroy();
+			_scoreDataBase = null;
 			
 			super.destroy();
 		}
@@ -111,7 +74,11 @@ package artcustomer.maxima.engine {
 		}
 		
 		/**
-		 * Save score.
+		 * Save score
+		 * 
+		 * @param	scoreID
+		 * @param	scoreValue
+		 * @param	playerID
 		 */
 		public function saveScore(scoreID:String, scoreValue:Object, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
 			if (_scoreDataBase.hasEntry(scoreID, playerID)) {
@@ -125,23 +92,13 @@ package artcustomer.maxima.engine {
 		
 		/**
 		 * Get score
+		 * 
+		 * @param	scoreID
+		 * @param	playerID
+		 * @return
 		 */
 		public function getScore(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):Object {
 			return _scoreDataBase.getEntry(scoreID, playerID);
-		}
-		
-		
-		/**
-		 * Instantiate ScoreEngine.
-		 */
-		public static function getInstance():ScoreEngine {
-			if (!__instance) {
-				__allowInstantiation = true;
-				__instance = new ScoreEngine();
-				__allowInstantiation = false;
-			}
-			
-			return __instance;
 		}
 	}
 }

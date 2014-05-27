@@ -37,67 +37,34 @@ package artcustomer.maxima.core {
 			
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_ABSTRACT_CLASS);
 			
-			setupDisplayContainer();
-			
+			_displayContainer = new Sprite();
 			_allowSetParent = true;
 		}
 		
-		//---------------------------------------------------------------------
-		//  Display Container
-		//---------------------------------------------------------------------
 		
 		/**
-		 * @private
+		 * Internal entry point.
 		 */
-		private function setupDisplayContainer():void {
-			_displayContainer = new Sprite();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyDisplayContainer():void {
-			_displayContainer = null;
-		}
-		
-		/**
-		 * @private
-		 */
-		private function addDisplayContainer():void {
+		override protected function onPreEntry():void {
 			if (_parent && !_parent.contains(_displayContainer)) _parent.addChild(_displayContainer);
+			
+			super.onPreEntry();
 		}
 		
 		/**
-		 * @private
+		 * Internal exit point.
 		 */
-		private function removeDisplayContainer():void {
+		override protected function onPostExit():void {
 			if (_parent && _parent.contains(_displayContainer)) _parent.removeChild(_displayContainer);
-		}
-		
-		
-		/**
-		 * Entry point. Override it !
-		 */
-		override protected function onEntry():void {
-			addDisplayContainer();
 			
-			super.onEntry();
-		}
-		
-		/**
-		 * Exit point. Override it !
-		 */
-		override protected function onExit():void {
-			removeDisplayContainer();
-			
-			super.onExit();
+			super.onPostExit();
 		}
 		
 		/**
 		 * Destructor. Must be overrided and called at end !
 		 */
 		override protected function destroy():void {
-			destroyDisplayContainer();
+			_displayContainer = null;
 			
 			_parent = null;
 			_allowSetParent = false;
@@ -153,7 +120,6 @@ package artcustomer.maxima.core {
 		public function set parent(value:DisplayObjectContainer):void {
 			if (_allowSetParent) {
 				_parent = value;
-				
 				_allowSetParent = false;
 			}
 		}

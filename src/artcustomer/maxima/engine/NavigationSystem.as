@@ -63,20 +63,6 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		private function setupNavigationMap():void {
-			_navigationMap = new Dictionary();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyNavigationMap():void {
-			_navigationMap = null;
-		}
-		
-		/**
-		 * @private
-		 */
 		private function disposeNavigationMap():void {
 			var key:String;
 			
@@ -89,20 +75,6 @@ package artcustomer.maxima.engine {
 		//---------------------------------------------------------------------
 		//  Navigation Stack
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function setupNavigationStack():void {
-			_navigationStack = new Array();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyNavigationStack():void {
-			_navigationStack = null;
-		}
 		
 		/**
 		 * @private
@@ -140,20 +112,6 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		private function setupHistoryStack():void {
-			_historyStack = new Array();
-		}
-		
-		/**
-		 * @private
-		 */
-		private function destroyHistoryStack():void {
-			_historyStack = null;
-		}
-		
-		/**
-		 * @private
-		 */
 		private function disposeHistoryStack():void {
 			var i:int;
 			var length:int = _historyStack.length;
@@ -169,27 +127,6 @@ package artcustomer.maxima.engine {
 		//---------------------------------------------------------------------
 		//  Event Dispatching
 		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function dispatchRequestedEvent():void {
-			this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_REQUESTED, false, false, _requestedLocation, _currentLocation));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchChangeEvent():void {
-			this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_CHANGE, false, false, _requestedLocation, _currentLocation));
-		}
-		
-		/**
-		 * @private
-		 */
-		private function dispatchNotFoundEvent():void {
-			this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, false, false, _requestedLocation, _currentLocation, _tempError));
-		}
 		
 		/**
 		 * @private
@@ -211,7 +148,7 @@ package artcustomer.maxima.engine {
 			if (!hasKey(key)) {
 				_tempError = ErrorsList.LOCATION_NOT_FOUND + key;
 				
-				dispatchNotFoundEvent();
+				this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_NOT_FOUND, false, false, _requestedLocation, _currentLocation, _tempError));
 			} else {
 				if (_currentLocation == key) _isChangeByHistory = true;
 				
@@ -219,7 +156,7 @@ package artcustomer.maxima.engine {
 				_currentEngineClass = _navigationMap[key];
 				_onProcessing = true;
 				
-				dispatchRequestedEvent();
+				this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_REQUESTED, false, false, _requestedLocation, _currentLocation));
 			}
 		}
 		
@@ -241,9 +178,9 @@ package artcustomer.maxima.engine {
 			_historyIndex = -1;
 			_onProcessing = false;
 			
-			setupNavigationMap();
-			setupNavigationStack();
-			setupHistoryStack();
+			_navigationMap = new Dictionary();
+			_navigationStack = new Array();
+			_historyStack = new Array();
 		}
 		
 		/**
@@ -251,11 +188,12 @@ package artcustomer.maxima.engine {
 		 */
 		override internal function destroy():void {
 			disposeNavigationMap();
-			destroyNavigationMap();
 			disposeHistoryStack();
-			destroyHistoryStack();
 			disposeNavigationStack();
-			destroyNavigationStack();
+			
+			_navigationMap = null;
+			_historyStack = null;
+			_navigationStack = null;
 			
 			_navigationIndex = 0;
 			_historyIndex = 0;
@@ -278,7 +216,7 @@ package artcustomer.maxima.engine {
 		 */
 		internal function addInMap(key:String, engineClass:Class):void {
 			if (_navigationMap[key]) {
-				throw new GameError(key + ' ' + GameError.E_EXISTING_KEY);
+				throw new GameError(key + GameError.E_EXISTING_KEY);
 			} else {
 				_navigationMap[key] = engineClass;
 				_navigationStack.push(key);
@@ -296,17 +234,22 @@ package artcustomer.maxima.engine {
 			
 			if (!_isChangeByHistory) {
 				if (isAvailableForHistory) {
-					_historyStack.push(_currentLocation);
-					
-					if (_isHistoryForward) {
-						_historyIndex++;
+					if (_historyIndex < 0 || _historyIndex == _historyStack.length - 1) {
+						_historyStack.push(_currentLocation);
 					} else {
-						_historyIndex--;
+						_historyStack.splice(_historyIndex + 1, _historyStack.length - (_historyIndex + 1));
+						_historyStack.push(_currentLocation);
 					}
+					
+					++_historyIndex;
+				}
+			} else {
+				if (!_isHistoryForward) {
+					--_historyIndex;
 				}
 			}
 			
-			dispatchChangeEvent();
+			this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_CHANGE, false, false, _requestedLocation, _currentLocation));
 			
 			_isChangeByHistory = false;
 			_onProcessing = false;

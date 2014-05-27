@@ -15,6 +15,7 @@ package artcustomer.maxima.context {
 	import flash.events.GestureEvent;
 	import flash.events.TransformGestureEvent;
 	import flash.utils.getQualifiedClassName;
+	import flash.ui.Keyboard;
 	
 	import artcustomer.maxima.events.*;
 	import artcustomer.maxima.errors.*;
@@ -39,6 +40,10 @@ package artcustomer.maxima.context {
 	[Event(name = "inputTouchEnd", type = "artcustomer.maxima.events.GameInputEvent")]
 	[Event(name = "inputTouchMove", type = "artcustomer.maxima.events.GameInputEvent")]
 	[Event(name = "inputTouchTap", type = "artcustomer.maxima.events.GameInputEvent")]
+	[Event(name = "deviceBack", type = "artcustomer.framework.events.DeviceInputsEvent")]
+	[Event(name = "deviceSearch", type = "artcustomer.framework.events.DeviceInputsEvent")]
+	[Event(name = "deviceMenu", type = "artcustomer.framework.events.DeviceInputsEvent")]
+	[Event(name = "deviceHome", type = "artcustomer.framework.events.DeviceInputsEvent")]
 	
 	
 	/**
@@ -63,20 +68,6 @@ package artcustomer.maxima.context {
 			super();
 			
 			if (getQualifiedClassName(this) == FULL_CLASS_NAME) throw new IllegalGameError(IllegalGameError.E_CROSSPLATFORMINPUTSCONTEXT_CONSTRUCTOR);
-		}
-		
-		//---------------------------------------------------------------------
-		//  Initialize
-		//---------------------------------------------------------------------
-		
-		/**
-		 * @private
-		 */
-		private function init():void {
-			_keyInputCounter = 0;
-			_keyInputRepeatDelay = 10;
-			_keyInputFastRepeatDelay = 2;
-			_isKeyReleased = false;
 		}
 		
 		//---------------------------------------------------------------------
@@ -139,7 +130,7 @@ package artcustomer.maxima.context {
 		 */
 		private function handleStage(e:Event):void {
 			switch (e.type) {
-				case('mouseLeave'):
+				case(Event.MOUSE_LEAVE):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_LEAVE, false, false, this, e));
 					break;
 					
@@ -153,43 +144,43 @@ package artcustomer.maxima.context {
 		 */
 		private function handleStageMouse(e:MouseEvent):void {
 			switch (e.type) {
-				case('rollOver'):
+				case(MouseEvent.ROLL_OVER):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_ROLL_OVER, false, false, this, e));
 					break;
 					
-				case('rollOut'):
+				case(MouseEvent.ROLL_OUT):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_ROLL_OUT, false, false, this, e));
 					break;
 				
-				case('mouseOver'):
+				case(MouseEvent.MOUSE_OVER):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_OVER, false, false, this, e));
 					break;
 					
-				case('mouseOut'):
+				case(MouseEvent.MOUSE_OUT):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_OUT, false, false, this, e));
 					break;
 					
-				case('mouseMove'):
+				case(MouseEvent.MOUSE_MOVE):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_MOVE, false, false, this, e));
 					break;
 					
-				case('mouseDown'):
+				case(MouseEvent.MOUSE_DOWN):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_DOWN, false, false, this, e));
 					break;
 					
-				case('mouseUp'):
+				case(MouseEvent.MOUSE_UP):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_UP, false, false, this, e));
 					break;
 					
-				case('click'):
+				case(MouseEvent.CLICK):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_CLICK, false, false, this, e));
 					break;
 					
-				case('doubleClick'):
+				case(MouseEvent.DOUBLE_CLICK):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_DOUBLECLICK, false, false, this, e));
 					break;
 					
-				case('mouseWheel'):
+				case(MouseEvent.MOUSE_WHEEL):
 					if (e.delta > 0) {
 						this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_MOUSE_WHEEL_UP, false, false, this, e));
 					} else {
@@ -206,21 +197,45 @@ package artcustomer.maxima.context {
 		 * @private
 		 */
 		private function handleStageKeys(e:KeyboardEvent):void {
+			var callPreventDefault:Boolean = false;
+			
 			switch (e.type) {
-				case('keyDown'):
+				case(KeyboardEvent.KEY_DOWN):
 					if (!_isKeyReleased) {
+						if (e.keyCode == Keyboard.MENU) {
+							this.dispatchEvent(new DeviceInputsEvent(DeviceInputsEvent.DEVICE_MENU, false, false, e, e.keyCode, e.charCode));
+							callPreventDefault = true;
+						}
+						
+						if (e.keyCode == Keyboard.BACK) {
+							this.dispatchEvent(new DeviceInputsEvent(DeviceInputsEvent.DEVICE_BACK, false, false, e, e.keyCode, e.charCode));
+							callPreventDefault = true;
+						}
+						
+						if (e.keyCode == Keyboard.SEARCH) {
+							this.dispatchEvent(new DeviceInputsEvent(DeviceInputsEvent.DEVICE_SEARCH, false, false, e, e.keyCode, e.charCode));
+							callPreventDefault = true;
+						}
+						
+						if (e.keyCode == Keyboard.HOME) {
+							this.dispatchEvent(new DeviceInputsEvent(DeviceInputsEvent.DEVICE_HOME, false, false, e, e.keyCode, e.charCode));
+							callPreventDefault = true;
+						}
+						
 						this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_KEY_PRESS, false, false, this, e));
+						
+						if (callPreventDefault) e.preventDefault();
 						
 						_isKeyReleased = true;
 					}
 					
-					_keyInputCounter++;
+					++_keyInputCounter;
 					
 					if (_keyInputCounter % _keyInputRepeatDelay == 0) this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_KEY_REPEAT, false, false, this, e));
 					if (_keyInputCounter % _keyInputFastRepeatDelay == 0) this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_KEY_FAST_REPEAT, false, false, this, e));
 					break;
 					
-				case('keyUp'):
+				case(KeyboardEvent.KEY_UP):
 					_keyInputCounter = 0;
 					_isKeyReleased = false;
 					
@@ -237,19 +252,19 @@ package artcustomer.maxima.context {
 		 */
 		private function handleStageTouch(e:TouchEvent):void {
 			switch (e.type) {
-				case('touchBegin'):
+				case(TouchEvent.TOUCH_BEGIN):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_TOUCH_BEGIN, false, false, this, e));
 					break;
 					
-				case('touchEnd'):
+				case(TouchEvent.TOUCH_END):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_TOUCH_END, false, false, this, e));
 					break;
 					
-				case('touchMove'):
+				case(TouchEvent.TOUCH_MOVE):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_TOUCH_MOVE, false, false, this, e));
 					break;
 					
-				case('touchTap'):
+				case(TouchEvent.TOUCH_TAP):
 					this.dispatchEvent(new GameInputEvent(GameInputEvent.INPUT_TOUCH_TAP, false, false, this, e));
 					break;
 					
@@ -263,7 +278,10 @@ package artcustomer.maxima.context {
 		 * Setup CrossPlatformInputsContext.
 		 */
 		override public function setup():void {
-			init();
+			_keyInputCounter = 0;
+			_keyInputRepeatDelay = 10;
+			_keyInputFastRepeatDelay = 2;
+			_isKeyReleased = false;
 			
 			super.setup();
 			
