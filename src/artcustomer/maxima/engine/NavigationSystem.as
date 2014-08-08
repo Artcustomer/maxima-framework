@@ -244,9 +244,7 @@ package artcustomer.maxima.engine {
 					++_historyIndex;
 				}
 			} else {
-				if (!_isHistoryForward) {
-					--_historyIndex;
-				}
+				if (!_isHistoryForward) --_historyIndex;
 			}
 			
 			this.dispatchEvent(new NavigationSystemEvent(NavigationSystemEvent.ON_LOCATION_CHANGE, false, false, _requestedLocation, _currentLocation));

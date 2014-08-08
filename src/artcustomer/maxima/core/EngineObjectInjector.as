@@ -67,7 +67,7 @@ package artcustomer.maxima.core {
 		 * @param	engineObject
 		 */
 		public function enableFocus(engineObject:AbstractEngineObject):void {
-			if (engineObject is AbstractEngineInteractiveObject) (engineObject as AbstractEngineInteractiveObject).focus = true;
+			if (engineObject is AbstractEngineInteractiveObject) (engineObject as AbstractEngineInteractiveObject).callFocus();
 		}
 		
 		/**
@@ -76,7 +76,7 @@ package artcustomer.maxima.core {
 		 * @param	engineObject
 		 */
 		public function disableFocus(engineObject:AbstractEngineObject):void {
-			if (engineObject is AbstractEngineInteractiveObject) (engineObject as AbstractEngineInteractiveObject).focus = false;
+			if (engineObject is AbstractEngineInteractiveObject) (engineObject as AbstractEngineInteractiveObject).callUnfocus();
 		}
 		
 		/**

@@ -100,7 +100,7 @@ package artcustomer.maxima.context {
 			}
 			
 			try {
-				Starling.multitouchEnabled = true;
+				Starling.multitouchEnabled = _isMobile;
 				Starling.handleLostContext = _handleLostContext;
 				
 				_starling = new Starling(StarlingRootClass, this.stageReference, viewPort, null, Context3DRenderMode.AUTO, _profile);
@@ -110,7 +110,6 @@ package artcustomer.maxima.context {
 				_starling.simulateMultitouch = false;
 				_starling.enableErrorChecking = false;
 				_starling.antiAliasing = 4;
-				_starling.showStats = true;
 				
 				_starling.stage.stageWidth = starlingStageWidth;
 				_starling.stage.stageHeight = starlingStageHeight;

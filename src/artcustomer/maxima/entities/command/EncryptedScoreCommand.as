@@ -9,25 +9,25 @@ package artcustomer.maxima.entities.command {
 	import flash.events.Event;
 	
 	import artcustomer.maxima.core.command.*;
-	import artcustomer.maxima.entities.model.ScoreModel;
+	import artcustomer.maxima.entities.model.EncryptedScoreModel;
 	import artcustomer.maxima.events.ScoreCommandEvent;
 	
 	
 	/**
-	 * ScoreCommand
+	 * EncryptedScoreCommand
 	 * 
 	 * @author David Massenot
 	 */
-	public class ScoreCommand extends AbstractCommand implements ICommand {
-		public static const ID:String = 'ScoreCommand';
+	public class EncryptedScoreCommand extends AbstractCommand implements ICommand {
+		public static const ID:String = 'EncryptedScoreCommand';
 		
-		private var _model:ScoreModel;
+		private var _model:EncryptedScoreModel;
 		
 		
 		/**
 		 * Constructor
 		 */
-		public function ScoreCommand() {
+		public function EncryptedScoreCommand() {
 			super(ID);
 		}
 		
@@ -36,7 +36,7 @@ package artcustomer.maxima.entities.command {
 		 * Setup Command.
 		 */
 		override public function setup():void {
-			_model = this.getModel(ScoreModel.ID) as ScoreModel;
+			_model = this.getModel(EncryptedScoreModel.ID) as EncryptedScoreModel;
 		}
 		
 		/**
@@ -63,6 +63,14 @@ package artcustomer.maxima.entities.command {
 					
 				case(ScoreCommandEvent.GET_SCORE):
 					_model.getScore(e.scoreID, e.playerID);
+					break;
+					
+				case(ScoreCommandEvent.SAVE_SCORE_IN_LOCALSTORAGE):
+					_model.saveScoreInLocalStorage(e.scoreID, e.value, e.playerID);
+					break;
+					
+				case(ScoreCommandEvent.GET_SCORE_FROM_LOCALSTORAGE):
+					_model.getScoreInLocalStorage(e.scoreID, e.playerID);
 					break;
 					
 				default:

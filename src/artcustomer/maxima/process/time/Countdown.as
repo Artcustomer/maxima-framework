@@ -35,6 +35,7 @@ package artcustomer.maxima.process.time {
 		private var _hours:String;
 		private var _minutes:String;
 		private var _seconds:String;
+		private var _totalSeconds:Number;
 		private var _percent:Number;
 		
 		private var _timer:Timer;
@@ -129,8 +130,8 @@ package artcustomer.maxima.process.time {
 			
 			if (timeLeft <= 0) _isComplete = true;
 			
-			seconds = Math.ceil(timeLeft / TIMER_DELAY);
-			minutes = Math.floor(seconds / NUM_SECONDS);
+			seconds = _totalSeconds = Math.ceil(timeLeft / TIMER_DELAY);
+			minutes = Math.floor(_totalSeconds / NUM_SECONDS);
 			hours = Math.floor(minutes / NUM_MINUTES);
 			days = Math.floor(hours / NUM_HOURS);
 			
@@ -207,6 +208,7 @@ package artcustomer.maxima.process.time {
 				
 				this.dispatchEvent(new CountdownEvent(CountdownEvent.ON_STOP_COUNTDOWN, false, false, _days, _hours, _minutes, _seconds, _percent));
 				
+				_totalSeconds = 0;
 				_percent = 0;
 			}
 		}
@@ -240,6 +242,18 @@ package artcustomer.maxima.process.time {
 		 */
 		public function appendTime(time:int):void {
 			if (_isStarted) _endDate.seconds += time;
+		}
+		
+		/**
+		 * Append time.
+		 * 
+		 * @param	time
+		 */
+		public function setTime(time:int):void {
+			if (_isStarted) {
+				_endDate = new Date();
+				_endDate.seconds += time;
+			}
 		}
 		
 		/**
@@ -285,6 +299,13 @@ package artcustomer.maxima.process.time {
 		 */
 		public function get seconds():String {
 			return _seconds;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get totalSeconds():int {
+			return _totalSeconds;
 		}
 		
 		/**

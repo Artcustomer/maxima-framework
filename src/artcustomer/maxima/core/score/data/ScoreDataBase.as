@@ -58,6 +58,13 @@ package artcustomer.maxima.core.score.data {
 			}
 		}
 		
+		/**
+		 * @private
+		 */
+		private function createEntryID(scoreID:String, playerID:String):String {
+			return scoreID + '_' + playerID;
+		}
+		
 		
 		/**
 		 * Destructor.
@@ -87,15 +94,18 @@ package artcustomer.maxima.core.score.data {
 		 * @param	playerID
 		 */
 		public function addEntry(scoreID:String, scoreValue:Object, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
+			var tmpEntryID:String = createEntryID(scoreID, playerID);
+			
 			if (!this.hasEntry(scoreID, playerID)) {
 				_lastEntry = new ScoreEntry();
-				_lastEntry.id = scoreID;
+				_lastEntry.id = tmpEntryID;
+				_lastEntry.scoreID = scoreID;
 				_lastEntry.value = scoreValue;
 				_lastEntry.player = playerID;
 				
-				_dataBase[scoreID] = _lastEntry;
+				_dataBase[tmpEntryID] = _lastEntry;
 				
-				_numEntries++;
+				++_numEntries;
 			}
 		}
 		
@@ -107,16 +117,17 @@ package artcustomer.maxima.core.score.data {
 		 */
 		public function deleteEntry(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
 			var entry:ScoreEntry;
+			var tmpEntryID:String = createEntryID(scoreID, playerID);
 			
 			if (this.hasEntry(scoreID, playerID)) {
-				entry = _dataBase[scoreID] as ScoreEntry;
+				entry = _dataBase[tmpEntryID] as ScoreEntry;
 				entry.destroy();
 				entry = null;
 				
-				_dataBase[scoreID] = undefined;
-				delete _dataBase[scoreID];
+				_dataBase[tmpEntryID] = undefined;
+				delete _dataBase[tmpEntryID];
 				
-				_numEntries--;
+				--_numEntries;
 			}
 		}
 		
@@ -128,9 +139,12 @@ package artcustomer.maxima.core.score.data {
 		 * @param	playerID
 		 */
 		public function updateEntry(scoreID:String, scoreValue:Object, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
+			var tmpEntryID:String = createEntryID(scoreID, playerID);
+			
 			if (this.hasEntry(scoreID, playerID)) {
-				_lastEntry = _dataBase[scoreID] as ScoreEntry;
-				_lastEntry.value = scoreValue;
+				(_dataBase[tmpEntryID] as ScoreEntry).value = scoreValue;
+				
+				_lastEntry = _dataBase[tmpEntryID] as ScoreEntry;
 			}
 		}
 		
@@ -142,29 +156,56 @@ package artcustomer.maxima.core.score.data {
 		 * @return
 		 */
 		public function hasEntry(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):Boolean {
-			return _dataBase[scoreID] != undefined;
+			return _dataBase[createEntryID(scoreID, playerID)] != undefined;
 		}
 		
 		/**
-		 * Get entry in database
+		 * Get entry value in database.
 		 * 
 		 * @param	scoreID
 		 * @param	playerID
 		 * @return
 		 */
-		public function getEntry(scoreID:String, playerID:String = null):Object {
+		public function getEntryValue(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):Object {
 			var id:String;
 			var entry:ScoreEntry;
+			var tmpEntryID:String = createEntryID(scoreID, playerID);
 			
-			for (id in _dataBase) {
-				entry = _dataBase[id] as ScoreEntry;
-				
-				if (entry) return entry.value;
-			}
+			entry = _dataBase[tmpEntryID] as ScoreEntry;
+			
+			if (entry) return entry.value;
 			
 			return null;
 		}
 		
+		/**
+		 * Get valid entry id.
+		 * 
+		 * @param	scoreID
+		 * @param	playerID
+		 * @return
+		 */
+		public function getEntryID(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):String {
+			return createEntryID(scoreID, playerID);
+		}
+		
+		/**
+		 * Set data with existing dictionary.
+		 * Careful ! This method rewrite all existing data !
+		 * 
+		 * @param	data
+		 */
+		public function setData(data:Dictionary):void {
+			_dataBase = data;
+		}
+		
+		
+		/**
+		 * @private
+		 */
+		public function get dataBase():Dictionary {
+			return _dataBase;
+		}
 		
 		/**
 		 * @private

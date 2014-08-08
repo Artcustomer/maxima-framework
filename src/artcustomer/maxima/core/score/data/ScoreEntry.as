@@ -17,6 +17,7 @@ package artcustomer.maxima.core.score.data {
 	 */
 	public class ScoreEntry implements IDestroyable {
 		private var _id:String;
+		private var _scoreID:String;
 		private var _value:Object;
 		private var _player:String;
 		
@@ -34,6 +35,7 @@ package artcustomer.maxima.core.score.data {
 		 */
 		public function destroy():void {
 			_id = null;
+			_scoreID = null;
 			_value = null;
 			_player = null;
 		}
@@ -44,7 +46,7 @@ package artcustomer.maxima.core.score.data {
 		 * @return
 		 */
 		public function toString():String {
-			return StringTools.formatToString(this, 'ScoreEntry', 'id', 'value', 'player');
+			return StringTools.formatToString(this, 'ScoreEntry', 'id', 'scoreID', 'value', 'player');
 		}
 		
 		/**
@@ -55,6 +57,7 @@ package artcustomer.maxima.core.score.data {
 		public function clone():ScoreEntry {
 			var scoreEntry:ScoreEntry = new ScoreEntry();
 			scoreEntry.id = _id;
+			scoreEntry.scoreID = _scoreID;
 			scoreEntry.value = _value;
 			scoreEntry.player = _player;
 			
@@ -74,6 +77,20 @@ package artcustomer.maxima.core.score.data {
 		 */
 		public function get id():String {
 			return _id;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set scoreID(value:String):void {
+			_scoreID = value;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get scoreID():String {
+			return _scoreID;
 		}
 		
 		/**

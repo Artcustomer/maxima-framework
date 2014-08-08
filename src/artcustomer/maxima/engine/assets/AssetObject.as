@@ -21,6 +21,7 @@ package artcustomer.maxima.engine.assets {
 		private var _group:String;
 		private var _file:String;
 		private var _type:String;
+		private var _scale:Number;
 		private var _data:*;
 		private var _bytes:*;
 		
@@ -42,6 +43,7 @@ package artcustomer.maxima.engine.assets {
 			_group = null;
 			_file = null;
 			_type = null;
+			_scale = 0;
 			_data = null;
 			_bytes = null;
 		}
@@ -53,7 +55,7 @@ package artcustomer.maxima.engine.assets {
 		 * @return
 		 */
 		public function toString():String {
-			return StringTools.formatToString(this, 'AssetObject', 'source', 'name', 'group', 'file', 'type');
+			return StringTools.formatToString(this, 'AssetObject', 'source', 'name', 'group', 'file', 'type', 'scale');
 		}
 		
 		
@@ -125,6 +127,20 @@ package artcustomer.maxima.engine.assets {
 		 */
 		public function get type():String {
 			return _type;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set scale(value:Number):void {
+			_scale = value;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get scale():Number {
+			return _scale;
 		}
 		
 		/**

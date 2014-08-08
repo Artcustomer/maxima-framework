@@ -66,6 +66,20 @@ package artcustomer.maxima.context {
 		}
 		
 		/**
+		 * Called by InteractiveContext when application receive focus. Don't call it !
+		 */
+		internal function focus():void {
+			_engineManager.focus();
+		}
+		
+		/**
+		 * Called by InteractiveContext when application loos focus. Don't call it !
+		 */
+		internal function unfocus():void {
+			_engineManager.unfocus();
+		}
+		
+		/**
 		 * Called when framework is ready. Override it, add entities and call start() here !
 		 */
 		protected function onReady():void {
@@ -264,13 +278,6 @@ package artcustomer.maxima.context {
 		 */
 		public function get directInputEngine():DirectInputEngine {
 			return _engineManager.directInputEngine;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function get scoreEngine():ScoreEngine {
-			return _engineManager.scoreEngine;
 		}
 		
 		/**

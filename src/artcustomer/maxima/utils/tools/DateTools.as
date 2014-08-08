@@ -151,7 +151,8 @@ package artcustomer.maxima.utils.tools {
 		 * @return
 		 */
 		public static function getSecondsTo(date:Date):Number {
-			return date.time - new Date().time;
+			//return Math.abs(date.time - new Date().time / 1000);
+			return Math.abs((date.time - new Date().time) / 1000);
 		}
 		
 		

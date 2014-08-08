@@ -173,8 +173,8 @@ package artcustomer.maxima.core.loader {
 		 * 
 		 * @param	description
 		 */
-		public final function load(description:String = 'loading'):void {
-			_assetsLoader.loadQueue(description);
+		public final function load(id:String = 'loading', description:String = 'loading assets'):void {
+			_assetsLoader.loadQueue(id, description);
 		}
 		
 		/**

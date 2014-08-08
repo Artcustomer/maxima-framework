@@ -80,8 +80,7 @@ package artcustomer.maxima.engine.sounds {
 		public function addSound(url:String, sound:Sound):void {
 			if (!this.hasSound(url)) {
 				_cache[url] = sound;
-				
-				_numSounds++;
+				++_numSounds;
 			}
 		}
 		

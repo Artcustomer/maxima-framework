@@ -8,6 +8,7 @@
 package artcustomer.maxima.engine.assets.data {
 	import artcustomer.maxima.base.IDestroyable;
 	import artcustomer.maxima.engine.assets.*;
+	import artcustomer.maxima.utils.tools.FileTools;
 	
 	
 	/**
@@ -106,9 +107,12 @@ package artcustomer.maxima.engine.assets.data {
 		 * @return
 		 */
 		public function getAsset(source:String):IAsset {
+			var i:int = 0;
+			var length:int = _stack.length;
 			var asset:IAsset;
 			
-			for each (asset in _stack) {
+			for (i ; i < length ; ++i) {
+				asset = _stack[i];
 				if (asset.source == source) return asset;
 			}
 			
@@ -122,9 +126,12 @@ package artcustomer.maxima.engine.assets.data {
 		 * @return
 		 */
 		public function getAssetByName(name:String):IAsset {
+			var i:int = 0;
+			var length:int = _stack.length;
 			var asset:IAsset;
 			
-			for each (asset in _stack) {
+			for (i ; i < length ; ++i) {
+				asset = _stack[i];
 				if (asset.name == name) return asset;
 			}
 			
@@ -138,10 +145,16 @@ package artcustomer.maxima.engine.assets.data {
 		 * @return
 		 */
 		public function getAssetByFile(file:String):IAsset {
+			var i:int = 0;
+			var length:int = _stack.length;
 			var asset:IAsset;
+			var fileName:String;
 			
-			for each (asset in _stack) {
-				if (asset.file == file) return asset;
+			for (i ; i < length ; ++i) {
+				asset = _stack[i];
+				fileName = FileTools.resolveFileName(file);
+				
+				if (asset.file == FileTools.escapeScaleFromFileName(file, asset.scale)) return asset;
 			}
 			
 			return null;

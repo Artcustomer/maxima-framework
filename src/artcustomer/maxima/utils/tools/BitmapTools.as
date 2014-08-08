@@ -25,6 +25,7 @@ package artcustomer.maxima.utils.tools {
 		
 		/**
 		 * Create and return a new Bitmap that fit in bounds.
+		 * 
 		 * @param	pBitmap
 		 * @param	pWidth
 		 * @param	pHeight
@@ -155,17 +156,42 @@ package artcustomer.maxima.utils.tools {
 		/**
 		 * Rescale Bitmap.
 		 * 
-		 * @param	bmpSrc
-		 * @param	scale
+		 * @param	pBmpSrc
+		 * @param	pScale
 		 */
-		public static function rescale(bmpSrc:Bitmap, scale:Number):void {
-			if (!bmpSrc) return;
+		public static function rescale(pBmpSrc:Bitmap, pScale:Number):void {
+			if (!pBmpSrc) return;
 			
-			var matrix:Matrix = bmpSrc.transform.matrix;
+			var matrix:Matrix = pBmpSrc.transform.matrix;
+			matrix.scale(pScale, pScale);
 			
-			matrix.scale(scale, scale);
+			pBmpSrc.transform.matrix = matrix;
 			
-			bmpSrc.transform.matrix = matrix;
+			/*scale = Math.abs(scale);
+            var width:int = (bitmapData.width * scale) || 1;
+            var height:int = (bitmapData.height * scale) || 1;
+            var transparent:Boolean = bitmapData.transparent;
+            var result:BitmapData = new BitmapData(width, height, transparent);
+            var matrix:Matrix = new Matrix();
+            matrix.scale(scale, scale);
+            result.draw(bitmapData, matrix);
+            return result;*/
+		}
+		
+		/**
+		 * Draw scaled Bitmap from BitmapData source.
+		 * 
+		 * @param	pBmpDataSrc
+		 * @param	pScale
+		 */
+		public static function scale(pBmpDataSrc:BitmapData, pScale:Number):Bitmap {
+			var matrix:Matrix = new Matrix();
+			matrix.scale(pScale, pScale);
+			
+			var smallBMD:BitmapData = new BitmapData(pBmpDataSrc.width * pScale, pBmpDataSrc.height * pScale, true, 0x000000);
+			smallBMD.draw(pBmpDataSrc, matrix, null, null, null, true);
+			
+			return new Bitmap(smallBMD, PixelSnapping.NEVER, true);
 		}
 		
 		/**

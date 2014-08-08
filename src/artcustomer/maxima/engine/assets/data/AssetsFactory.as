@@ -156,6 +156,7 @@ package artcustomer.maxima.engine.assets.data {
 				asset.group = loadableAsset.group;
 				asset.file = loadableAsset.file;
 				asset.type = loadableAsset.type;
+				asset.scale = loadableAsset.scale;
 				asset.data = loadableAsset.data;
 				asset.bytes = loadableAsset.bytes;
 			}

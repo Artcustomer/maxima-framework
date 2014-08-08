@@ -12,6 +12,7 @@ package artcustomer.maxima.engine {
 	import artcustomer.maxima.errors.GameError;
 	import artcustomer.maxima.core.command.AbstractCommand;
 	import artcustomer.maxima.core.model.AbstractModel;
+	import artcustomer.maxima.core.ui.IUIHelper;
 	import artcustomer.maxima.data.IViewData;
 	
 	
@@ -21,6 +22,8 @@ package artcustomer.maxima.engine {
 	 * @author David Massenot
 	 */
 	public class LogicEngine extends AbstractCoreEngine {
+		private var _uiHelper:IUIHelper;
+		
 		private var _commands:Dictionary;
 		private var _models:Dictionary;
 		
@@ -68,6 +71,20 @@ package artcustomer.maxima.engine {
 			if (context.instance.gameEngine.currentEngineObject) _injector.updateObject(context.instance.gameEngine.currentEngineObject, id, data, type);
 		}
 		
+		//---------------------------------------------------------------------
+		//  UIHelper
+		//---------------------------------------------------------------------
+		
+		/**
+		 * @private
+		 */
+		private function destroyUIHelper():void {
+			if (_uiHelper) {
+				_uiHelper.destroy();
+				_uiHelper = null;
+			}
+		}
+		
 		
 		/**
 		 * Entry point.
@@ -87,6 +104,7 @@ package artcustomer.maxima.engine {
 		override internal function destroy():void {
 			releaseCommands();
 			releaseModels();
+			destroyUIHelper();
 			
 			_commands = null;
 			_models = null;
@@ -247,6 +265,23 @@ package artcustomer.maxima.engine {
 		 */
 		public function get numModels():int {
 			return _numModels;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set uiHelper(value:IUIHelper):void {
+			destroyUIHelper();
+			
+			_uiHelper = value;
+			_uiHelper.init();
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get uiHelper():IUIHelper {
+			return _uiHelper;
 		}
 	}
 }

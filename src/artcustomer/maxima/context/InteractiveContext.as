@@ -81,6 +81,7 @@ package artcustomer.maxima.context {
 		private var _isFullScreen:Boolean;
 		
 		protected var _isHD:Boolean;
+		protected var _isMobile:Boolean;
 		protected var _isTablet:Boolean;
 		protected var _isDesktop:Boolean;
 		
@@ -150,6 +151,7 @@ package artcustomer.maxima.context {
 						_isFocusOnStage = true;
 						
 						this.dispatchEvent(new GameEvent(GameEvent.GAME_FOCUS_IN, false, false, this, contextWidth, contextHeight, stageWidth, stageHeight));
+						if (this.instance) this.instance.focus();
 					}
 					break;
 					
@@ -158,6 +160,7 @@ package artcustomer.maxima.context {
 						_isFocusOnStage = false;
 						
 						this.dispatchEvent(new GameEvent(GameEvent.GAME_FOCUS_OUT, false, false, this, contextWidth, contextHeight, stageWidth, stageHeight));
+						if (this.instance) this.instance.unfocus();
 					}
 					break;
 					
@@ -314,11 +317,12 @@ package artcustomer.maxima.context {
 		 */
 		override public function setup():void {
 			_contextView.stage.scaleMode = StageScaleMode.NO_SCALE;
-			_contextView.stage.quality = StageQuality.HIGH;
+			_contextView.stage.quality = StageQuality.LOW;
 			_contextView.stage.align = StageAlign.TOP_LEFT;
 			
 			_isLogoShow = false;
 			_isDesktop = Capabilities.playerType == 'Desktop' ? true : false;
+			_isMobile = MobileTools.isMobile();
 			_isTablet = MobileTools.isTablet(this.stageReference);
 			
 			super.setup();
@@ -377,6 +381,7 @@ package artcustomer.maxima.context {
 			_isFocusOnStage = false;
 			_isFullScreen = false;
 			_isHD = false;
+			_isMobile = false;
 			_isTablet = false;
 			_isDesktop = false;
 			
@@ -764,6 +769,13 @@ package artcustomer.maxima.context {
 		 */
 		public function get isDesktop():Boolean {
 			return _isDesktop;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function get isMobile():Boolean {
+			return _isMobile;
 		}
 		
 		/**

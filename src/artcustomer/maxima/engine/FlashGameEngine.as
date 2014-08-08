@@ -12,7 +12,6 @@ package artcustomer.maxima.engine {
 	import artcustomer.maxima.core.*;
 	import artcustomer.maxima.core.game.*;
 	import artcustomer.maxima.core.loader.*;
-	import artcustomer.maxima.core.score.*;
 	import artcustomer.maxima.core.view.*;
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.events.*;

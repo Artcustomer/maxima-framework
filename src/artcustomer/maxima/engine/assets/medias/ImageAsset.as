@@ -131,10 +131,10 @@ package artcustomer.maxima.engine.assets.medias {
 		 * Start loading.
 		 */
 		override public function load():void {
+			super.load();
+			
 			setupURLRequest();
 			startLoader();
-			
-			super.load();
 		}
 		
 		/**

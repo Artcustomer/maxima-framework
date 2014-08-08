@@ -17,6 +17,7 @@ package artcustomer.maxima.events {
 	public class SingleChannelEvent extends Event {
 		public static const ON_PLAY_SOUND:String = 'onPlaySound';
 		public static const ON_STOP_SOUND:String = 'onStopSound';
+		public static const ON_SOUND_PLAYING:String = 'onSoundPlaying';
 		public static const ON_SOUND_ERROR:String = 'onSoundError';
 		public static const ON_SOUND_COMPLETE:String = 'onSoundComplete';
 		public static const ON_SOUND_ID3:String = 'onSoundID3';
@@ -24,6 +25,8 @@ package artcustomer.maxima.events {
 		private var _channelIndex:int;
 		private var _soundURL:String;
 		private var _isMasterChannel:Boolean;
+		private var _soundIndex:int;
+		private var _numSounds:int;
 		private var _error:String;
 		
 		

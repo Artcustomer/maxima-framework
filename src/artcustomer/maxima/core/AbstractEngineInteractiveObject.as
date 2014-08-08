@@ -108,6 +108,38 @@ package artcustomer.maxima.core {
 		}
 		
 		/**
+		 * Focus object. Must be overrided !
+		 */
+		protected function focus():void {
+			
+		}
+		
+		/**
+		 * Unfocus object. Must be overrided !
+		 */
+		protected function unfocus():void {
+			
+		}
+		
+		/**
+		 * Inject focus method on object.
+		 */
+		internal function callFocus():void {
+			_onFocus = true;
+			
+			this.focus();
+		}
+		
+		/**
+		 * Inject unfocus method on object.
+		 */
+		internal function callUnfocus():void {
+			_onFocus = false;
+			
+			this.unfocus();
+		}
+		
+		/**
 		 * Inject control into object (called by EngineObjectManager)
 		 * 
 		 * @param	method
@@ -122,8 +154,8 @@ package artcustomer.maxima.core {
 		/**
 		 * @private
 		 */
-		internal function set focus(value:Boolean):void {
-			_onFocus = value;
+		public function get onFocus():Boolean {
+			return _onFocus;
 		}
 	}
 }

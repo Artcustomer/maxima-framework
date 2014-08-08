@@ -87,7 +87,7 @@ package artcustomer.maxima.engine.sounds {
 		 */
 		private function recycleChannel():SingleChannel {
 			if (_pool.length > 0) {
-				_numChannelsInPool--;
+				--_numChannelsInPool;
 				
 				return _pool.pop();
 			}
@@ -157,7 +157,7 @@ package artcustomer.maxima.engine.sounds {
 			channel.setMasterVolume(_tempMasterVolume);
 			
 			_stack.push(channel);
-			_numChannels++;
+			++_numChannels;
 			
 			return channel;
 		}
@@ -209,8 +209,8 @@ package artcustomer.maxima.engine.sounds {
 				
 				storeChannel(channel);
 				
-				_numChannels--;
-				_numChannelsInPool++;
+				--_numChannels;
+				++_numChannelsInPool;
 				
 				updateChannelIndexes();
 			} else {

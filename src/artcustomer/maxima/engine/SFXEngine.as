@@ -21,6 +21,7 @@ package artcustomer.maxima.engine {
 	 */
 	public class SFXEngine extends AbstractCoreEngine {
 		private static const BUFFER_TIME:int = 5000;
+		private static const MAX_CHANNELS:int = 32;
 		
 		private var _channelFactory:ChannelFactory;
 		private var _soundsCache:SoundsCache;
@@ -45,7 +46,7 @@ package artcustomer.maxima.engine {
 		/**
 		 * @private
 		 */
-		private function onLoadedChannel(stream:String, sound:Sound):void {
+		private function onChannelLoaded(stream:String, sound:Sound):void {
 			_soundsCache.addSound(stream, sound);
 		}
 		
@@ -92,7 +93,9 @@ package artcustomer.maxima.engine {
 		 * @return
 		 */
 		public function addChannel():SingleChannel {
-			var channel:SingleChannel = _channelFactory.addChannel(onLoadedChannel);
+			if (_channelFactory.numChannels == MAX_CHANNELS) throw new GameError(GameError.E_SFX_MAX_CHANNELS);
+			
+			var channel:SingleChannel = _channelFactory.addChannel(onChannelLoaded);
 			
 			channel.setVolume(channel.volume * _volume);
 			channel.setPan(_pan);
@@ -156,11 +159,22 @@ package artcustomer.maxima.engine {
 		 */
 		public function playStreamOnChannel(stream:String, index:int = 0, begin:int = 0, loops:int = 0):void {
 			if (index < _channelFactory.numChannels) {
-				if (_soundsCache.hasSound(stream)) {
-					_channelFactory.getChannel(index).playSound(_soundsCache.getSound(stream), begin, loops);
-				} else {
-					_channelFactory.getChannel(index).playStream(stream, begin, loops);
-				}
+				_channelFactory.getChannel(index).playStream(stream, begin, loops);
+			} else {
+				throw new GameError(GameError.E_SFX_OVERFLOW);
+			}
+		}
+		
+		/**
+		 * Play multiple sounds by stream on channel.
+		 * 
+		 * @param	streams : Array of streams (String format or Sound format)
+		 * @param	index : 0 is the master channel.
+		 * @param	resetLastQueue : Reset last queue or add
+		 */
+		public function queueStreamsOnChannel(streams:Array, index:int = 0, resetLastQueue:Boolean = false):void {
+			if (index < _channelFactory.numChannels) {
+				_channelFactory.getChannel(index).queueStreams(streams, resetLastQueue);
 			} else {
 				throw new GameError(GameError.E_SFX_OVERFLOW);
 			}
@@ -183,10 +197,11 @@ package artcustomer.maxima.engine {
 		 * Resume channel.
 		 * 
 		 * @param	index
+		 * @param	resetSoundPosition
 		 */
-		public function resumeChannel(index:int = 0):void {
+		public function resumeChannel(index:int = 0, resetSoundPosition:Boolean = false):void {
 			if (index < _channelFactory.numChannels) {
-				_channelFactory.getChannel(index).resume();
+				_channelFactory.getChannel(index).resume(resetSoundPosition);
 			} else {
 				throw new GameError(GameError.E_SFX_OVERFLOW);
 			}

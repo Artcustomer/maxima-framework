@@ -6,14 +6,12 @@
  */
 
 package artcustomer.maxima.utils.display.starling.graphics {
-	import flash.display.Shape;
-	import flash.display.Bitmap;
-	import flash.display.BitmapData;
-	import flash.display.CapsStyle;
+	import flash.display.*;
 	import flash.geom.Matrix;
 	import flash.filters.*;
 	
-	import starling.display.*;
+	import starling.display.Image;
+	import starling.display.Quad;
 	import starling.textures.Texture;
 	
 	
@@ -44,7 +42,7 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			bmpData = new BitmapData(width * scale, height * scale, true, 0);
 			bmpData.draw(shape, new Matrix());
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -81,37 +79,43 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			var shape:Shape = new Shape();
 			
 			shape.graphics.beginFill(color);
-			shape.graphics.drawCircle(radius, radius, radius);
+			shape.graphics.drawCircle(radius * scale, radius * scale, radius * scale);
 			shape.graphics.endFill();
 			
-			bmpData = new BitmapData(radius * 2, radius * 2, true, 0);
+			bmpData = new BitmapData(radius * 2 * scale, radius * 2 * scale, true, 0);
 			bmpData.draw(shape, new Matrix());
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
-		 * Draw circle.
+		 * Draw beveled circle.
 		 * 
 		 * @param	radius
 		 * @param	color
 		 * @param	scale
+		 * @param	distance
+		 * @param	angle
+		 * @param	shadowColor
+		 * @param	strength
 		 * @return
 		 */
-		public static function drawBeveledCircle(radius:int, color:uint, scale:Number = 1, distance:Number = 6, angle:Number = 45, shadowColor:uint = 0x000000):Texture {
+		public static function drawBeveledCircle(radius:int, color:uint, scale:Number = 1, distance:Number = 10, angle:Number = 45, shadowColor:uint = 0x000000, strength:Number = .7):Texture {
+			var shadowDistance:int = 4 * scale;
 			var bmpData:BitmapData;
 			var shape:Shape = new Shape();
-			var bevel:BevelFilter = new BevelFilter(distance, angle, color, 1, shadowColor, 1, 5, 6, .7);
+			var bevel:BevelFilter = new BevelFilter(distance, angle, color, 1, shadowColor, 1, 6, 6, strength);
+			var shadow:DropShadowFilter = new DropShadowFilter(shadowDistance, 45, 0x000000, .5, shadowDistance, shadowDistance);
 			
 			shape.graphics.beginFill(color);
-			shape.graphics.drawCircle(radius, radius, radius);
+			shape.graphics.drawCircle(radius * scale, radius * scale, radius * scale);
 			shape.graphics.endFill();
-			shape.filters = [bevel];
+			shape.filters = [bevel, shadow];
 			
-			bmpData = new BitmapData(radius * 2, radius * 2, true, 0);
+			bmpData = new BitmapData(shape.width + shadowDistance, shape.height + shadowDistance, true, 0);
 			bmpData.draw(shape, new Matrix());
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -136,7 +140,7 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			bmpData = new BitmapData(width * scale, height * scale, true, 0);
 			bmpData.draw(shape, new Matrix(), null, null, null, true);
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -154,19 +158,21 @@ package artcustomer.maxima.utils.display.starling.graphics {
 		 * @return
 		 */
 		public static function drawRoundBeveledRect(width:int, height:int, radius:Number, color:uint, scale:Number = 1, alpha:Number = 1, distance:Number = 6, angle:Number = 45, shadowColor:uint = 0x000000):Texture {
+			var shadowDistance:int = 2 * scale;
 			var bmpData:BitmapData;
 			var shape:Shape = new Shape();
 			var bevel:BevelFilter = new BevelFilter(distance, angle, color, 1, shadowColor, .8, 5, 6, .5);
+			var shadow:DropShadowFilter = new DropShadowFilter(shadowDistance, 45, 0x000000, .5, shadowDistance, shadowDistance);
 			
 			shape.graphics.beginFill(color, alpha);
 			shape.graphics.drawRoundRect(0, 0, width * scale, height * scale, radius * scale, radius * scale);
 			shape.graphics.endFill();
-			shape.filters = [bevel];
+			shape.filters = [bevel, shadow];
 			
-			bmpData = new BitmapData(width * scale, height * scale, true, 0);
+			bmpData = new BitmapData(shape.width + shadowDistance, shape.height + shadowDistance, true, 0);
 			bmpData.draw(shape, new Matrix(), null, null, null, true);
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -194,7 +200,7 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			bmpData = new BitmapData(width * scale, (height + 0) * scale, true, 0);
 			bmpData.draw(shape, new Matrix(), null, null, null, true);
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -215,14 +221,14 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			var shape:Shape = new Shape();
 			
 			shape.graphics.beginFill(fillColor, fillAlpha);
-			shape.graphics.lineStyle(thickness, lineColor, 1, true, 'normal', CapsStyle.ROUND, null, 10);
+			shape.graphics.lineStyle(thickness, lineColor, 1, true, LineScaleMode.NORMAL, CapsStyle.ROUND, null, 10);
 			shape.graphics.drawRoundRect(0, 0, width * scale, height * scale, radius * scale, radius * scale);
 			shape.graphics.endFill();
 			
 			bmpData = new BitmapData((width + thickness) * scale, (height + thickness) * scale, true, 0);
 			bmpData.draw(shape, new Matrix(), null, null, null, true);
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 		
 		/**
@@ -248,7 +254,7 @@ package artcustomer.maxima.utils.display.starling.graphics {
 			bmpData = new BitmapData(width * scale, height * scale, true, 0);
 			bmpData.draw(shape, new Matrix(), null, null, null, true);
 			
-			return Texture.fromBitmapData(bmpData, false, false, scale);
+			return Texture.fromBitmapData(bmpData, false, true, scale);
 		}
 	}
 }

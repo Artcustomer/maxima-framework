@@ -7,8 +7,8 @@
 
 package artcustomer.maxima.entities.model {
 	import artcustomer.maxima.core.model.*;
-	import artcustomer.maxima.core.score.*;
 	import artcustomer.maxima.core.score.data.*;
+	import artcustomer.maxima.entities.model.data.GameScoreData;
 	import artcustomer.maxima.utils.consts.*;
 	
 	
@@ -19,8 +19,10 @@ package artcustomer.maxima.entities.model {
 	 */
 	public class ScoreModel extends AbstractModel implements IModel {
 		public static const ID:String = 'ScoreModel';
+		public static const UPDATE_TYPE:String = 'saveScore';
 		
 		private var _scoreDataBase:ScoreDataBase;
+		private var _data:GameScoreData;
 		
 		
 		/**
@@ -36,6 +38,7 @@ package artcustomer.maxima.entities.model {
 		 */
 		override public function setup():void {
 			_scoreDataBase = new ScoreDataBase();
+			_data = new GameScoreData();
 		}
 		
 		/**
@@ -45,37 +48,42 @@ package artcustomer.maxima.entities.model {
 			_scoreDataBase.destroy();
 			_scoreDataBase = null;
 			
+			_data.destroy();
+			_data = null;
+			
 			super.destroy();
 		}
 		
 		
 		/**
-		 * Save score
+		 * Update score.
 		 * 
 		 * @param	scoreID
 		 * @param	scoreValue
 		 * @param	playerID
 		 */
-		public function saveScore(scoreID:String, scoreValue:Object, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
+		public function updateScore(scoreID:String, scoreValue:Object, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):void {
 			if (_scoreDataBase.hasEntry(scoreID, playerID)) {
 				_scoreDataBase.updateEntry(scoreID, scoreValue, playerID);
 			} else {
 				_scoreDataBase.addEntry(scoreID, scoreValue, playerID);
 			}
 			
-			// TODO : Send update
-			//if (_scoreManager) _scoreManager.onSaveScore(_scoreDataBase.lastEntry);
+			_data.error = null;
+			_data.lastEntry = _scoreDataBase.lastEntry;
+			
+			this.update(UPDATE_TYPE, _data);
 		}
 		
 		/**
-		 * Get score
+		 * Get score.
 		 * 
 		 * @param	scoreID
 		 * @param	playerID
 		 * @return
 		 */
 		public function getScore(scoreID:String, playerID:String = GameUniverse.DEFAULT_PLAYER_NAME):Object {
-			return _scoreDataBase.getEntry(scoreID, playerID);
+			return _scoreDataBase.getEntryValue(scoreID, playerID);
 		}
 	}
 }

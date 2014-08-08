@@ -29,7 +29,6 @@ package artcustomer.maxima.engine {
 		private var _assetsLoader:AssetsLoader;
 		private var _renderEngine:RenderEngine;
 		private var _logicEngine:LogicEngine;
-		private var _scoreEngine:ScoreEngine;
 		private var _sfxEngine:SFXEngine;
 		private var _directInputEngine:DirectInputEngine;
 		private var _gameEngine:GameEngine;
@@ -56,12 +55,10 @@ package artcustomer.maxima.engine {
 		 */
 		public function setup():void {
 			_engineObjectInjector = EngineObjectInjector.getInstance();
-			
 			_shore = Shore.getInstance();
 			
 			_assetsLoader = createEngine(AssetsLoader, false) as AssetsLoader;
 			_renderEngine = createEngine(RenderEngine, false) as RenderEngine;
-			_scoreEngine = createEngine(ScoreEngine) as ScoreEngine;
 			_sfxEngine = createEngine(SFXEngine, false) as SFXEngine;
 			_logicEngine = createEngine(LogicEngine) as LogicEngine;
 			_directInputEngine = createEngine(DirectInputEngine) as DirectInputEngine;
@@ -79,9 +76,6 @@ package artcustomer.maxima.engine {
 			
 			_sfxEngine.destroy();
 			_sfxEngine = null;
-			
-			_scoreEngine.destroy();
-			_scoreEngine = null;
 			
 			_renderEngine.destroy();
 			_renderEngine = null;
@@ -119,6 +113,21 @@ package artcustomer.maxima.engine {
 		 */
 		public function resize():void {
 			if (_gameEngine && _gameEngine.currentEngineObject) _engineObjectInjector.resizeObject(_gameEngine.currentEngineObject);
+		}
+		
+		/**
+		 * Focus object.
+		 */
+		public function focus():void {
+			if (_gameEngine && _gameEngine.currentEngineObject) _engineObjectInjector.enableFocus(_gameEngine.currentEngineObject);
+
+		}
+		
+		/**
+		 * Unfocus object.
+		 */
+		public function unfocus():void {
+			if (_gameEngine && _gameEngine.currentEngineObject) _engineObjectInjector.disableFocus(_gameEngine.currentEngineObject);
 		}
 		
 		/**
@@ -205,13 +214,6 @@ package artcustomer.maxima.engine {
 		 */
 		public function get logicEngine():LogicEngine {
 			return _logicEngine;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function get scoreEngine():ScoreEngine {
-			return _scoreEngine;
 		}
 		
 		/**

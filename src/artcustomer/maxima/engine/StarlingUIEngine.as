@@ -1,7 +1,11 @@
 package artcustomer.maxima.engine {
-	import artcustomer.maxima.engine.AbstractStarlingDisplayCoreEngine;
+	import flash.display.Bitmap;
 	
-	import starling.display.DisplayObject;
+	import artcustomer.maxima.engine.AssetsLoader;
+	import artcustomer.maxima.engine.AbstractStarlingDisplayCoreEngine;
+	import artcustomer.maxima.utils.tools.BitmapTools;
+	
+	import starling.display.*;
 	
 	
 	/**
@@ -19,15 +23,6 @@ package artcustomer.maxima.engine {
 			super();
 		}
 		
-		
-		/**
-		 * Entry point.
-		 */
-		override internal function setup():void {
-			super.setup();
-			
-			//
-		}
 		
 		/**
 		 * Destructor
@@ -111,6 +106,27 @@ package artcustomer.maxima.engine {
 		 */
 		public function getChildByName(name:String):DisplayObject {
 			return this.engineDisplayContainer.getChildByName(name);
+		}
+		
+		/**
+		 * Get Starling Image from asset file name in AssetsLoader.
+		 * You can resize (width OR height) oand/or rescale bitmap source before create the image. 
+		 * 
+		 * @param	assetsFileName
+		 * @param	scaleFactor
+		 * @param	assetsScale
+		 * @param	maxWidth
+		 * @param	maxHeight
+		 * @param	generateMipMaps
+		 * @return
+		 */
+		public function getImageFromAssetsLoader(assetsFileName:String, scaleFactor:Number = 1, assetsScale:Number = 1, maxWidth:int = 0, maxHeight:int = 0, generateMipMaps:Boolean = false):Image {
+			var bitmap:Bitmap = this.context.instance.assetsLoader.getAssetByFile(assetsFileName).data as Bitmap;
+			if (maxWidth > 0) bitmap = BitmapTools.resize(bitmap, maxWidth);
+			if (maxHeight > 0) bitmap = BitmapTools.resize(bitmap, maxHeight, BitmapTools.RESIZE_FROM_HEIGHT);
+			if (assetsScale != 1) bitmap = BitmapTools.scale(bitmap.bitmapData, assetsScale);
+			
+			return Image.fromBitmap(bitmap, generateMipMaps, scaleFactor);
 		}
 	}
 }

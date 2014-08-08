@@ -10,7 +10,6 @@ package artcustomer.maxima.engine {
 	import artcustomer.maxima.core.*;
 	import artcustomer.maxima.core.game.*;
 	import artcustomer.maxima.core.loader.*;
-	import artcustomer.maxima.core.score.*;
 	import artcustomer.maxima.core.view.*;
 	import artcustomer.maxima.errors.*;
 	import artcustomer.maxima.events.*;
@@ -97,6 +96,7 @@ package artcustomer.maxima.engine {
 				_currentEngineObject.addEventListener(EngineObjectEvent.ON_EXIT, handleCurrentEngineObject, false, 0, true);
 				_currentEngineObject.addEventListener(EngineObjectEvent.ON_RESTART, handleCurrentEngineObject, false, 0, true);
 				_injector.entryObject(_currentEngineObject);
+				if (!this.context.instance.isFocusOnStage) _injector.disableFocus(_currentEngineObject);
 			} else {
 				throw new GameError(GameError.E_NULL_CURRENTOBJECT);
 			}

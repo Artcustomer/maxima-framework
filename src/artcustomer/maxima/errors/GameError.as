@@ -55,6 +55,7 @@ package artcustomer.maxima.errors {
 		public static const E_NAVIGATION_ERROR:String = "Error on NavigationSystem !";
 		
 		public static const E_SFX_OVERFLOW:String = "Channel index is out of bounds !";
+		public static const E_SFX_MAX_CHANNELS:String = "FlashPlayer doesn't support more of 32 channels !";
 		public static const E_SFX_DISPOSE_MASTER:String = "Can't dispose master channel !";
 		
 		public static const E_FILE_FORMAT:String = "Can't load asset because of invalid format !";
